@@ -6,33 +6,25 @@ const DB_VERSION = "DYNO_V2_PRO_FINAL";
 // --- CONFIGURAÇÃO SUPABASE ---
 const supabaseUrl = 'https://tdzwbddisdrikzztqoze.supabase.co';
 const supabaseKey = 'sb_publishable_BcNbL1tcyFRTpBRqAxgaEw_4Wq7o-tY';
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
-const tokenABI = [
-    {"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"value","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
-    {"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}
-];
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 const gpus = [
-    { id: 1, nome: "Dyno Normal", custo: 50, lucro10d: 5, poder: 10, img: "NORMAL.png" },
-    { id: 2, nome: "Dyno Raro", custo: 150, lucro10d: 7, poder: 35, img: "RARO.png" },
-    { id: 3, nome: "Dyno Épico", custo: 300, lucro10d: 10, poder: 120, img: "ÉPICO.png" },
-    { id: 4, nome: "Dyno Lendário", custo: 600, lucro10d: 15, poder: 450, img: "LENDÁRIO.png" },
-    { id: 5, nome: "Super Lendário", custo: 1500, lucro10d: 25, poder: 1500, img: "SUPER LENDÁRIO.png" }
+    { id: 1, nome: "Dyno Normal", custo: 50, poder: 10, img: "NORMAL.png" },
+    { id: 2, nome: "Dyno Raro", custo: 150, poder: 35, img: "RARO.png" },
+    { id: 3, nome: "Dyno Épico", custo: 300, poder: 120, img: "ÉPICO.png" },
+    { id: 4, nome: "Dyno Lendário", custo: 600, poder: 450, img: "LENDÁRIO.png" },
+    { id: 5, nome: "Super Lendário", custo: 1500, poder: 1500, img: "SUPER LENDÁRIO.png" }
 ];
 
-let userAccount = null, balance = 0.0, isMining = false, miningEndTime = null, purchaseHistory = {};
-let refEarnings = 0.0, refCount = 0;
+let userAccount = null, balance = 0.0, purchaseHistory = {};
 
-// --- MATRIX EFFECT ---
+// --- EFEITO MATRIX ---
 let canvas, ctx, columns, drops;
-
 function initMatrix() {
     canvas = document.getElementById('matrixCanvas');
     if(!canvas) return;
     ctx = canvas.getContext('2d');
-    const header = document.querySelector('header');
-    if(!header) return;
+    const header = document.querySelector('header') || { offsetWidth: window.innerWidth, offsetHeight: 150 };
     canvas.width = header.offsetWidth;
     canvas.height = header.offsetHeight;
     columns = canvas.width / 14;
@@ -53,94 +45,50 @@ function drawMatrix() {
     }
 }
 
-// --- BANCO DE DADOS ---
-async function loadUserData(address) {
-    const { data, error } = await supabase
-        .from('usuarios')
-        .select('*')
-        .eq('carteira', address.toLowerCase())
-        .single();
-
-    if (data) {
-        balance = data.saldo_minera || 0;
-        refEarnings = data.ref_earnings || 0;
-        refCount = data.ref_count || 0;
-        const local = JSON.parse(localStorage.getItem(DB_VERSION + "_" + address.toLowerCase())) || {};
-        isMining = local.isMining || false;
-        miningEndTime = local.miningEndTime || null;
-        purchaseHistory = local.purchaseHistory || {};
-        updateUI();
-    } else {
-        await supabase.from('usuarios').insert([{ carteira: address.toLowerCase() }]);
-    }
-}
-
-async function syncToDatabase() {
-    if (!userAccount) return;
-    await supabase.from('usuarios').update({ 
-        saldo_minera: balance, 
-        ref_earnings: refEarnings, 
-        ref_count: refCount 
-    }).eq('carteira', userAccount.toLowerCase());
-
-    localStorage.setItem(DB_VERSION + "_" + userAccount.toLowerCase(), JSON.stringify({ 
-        isMining, miningEndTime, purchaseHistory 
-    }));
-}
-
-// --- CORE ACTIONS ---
+// --- LOGICA PRINCIPAL ---
 async function connectWallet() {
     if (window.ethereum) {
         try {
             const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
             userAccount = accs[0];
+            document.getElementById('walletDisplay').innerText = userAccount.substring(0,6) + "...";
             await loadUserData(userAccount);
             renderShop();
-            updateUI();
-            document.getElementById('walletDisplay').innerText = userAccount.substring(0,6) + "...";
-        } catch (e) { alert("Erro ao conectar."); }
+        } catch (e) { console.error("Erro ao conectar", e); }
     } else { alert("Instale a MetaMask!"); }
+}
+
+async function loadUserData(address) {
+    const { data, error } = await supabaseClient.from('usuarios').select('*').eq('carteira', address.toLowerCase()).single();
+    if (data) {
+        balance = data.saldo_minera || 0;
+        updateUI();
+    } else {
+        await supabaseClient.from('usuarios').insert([{ carteira: address.toLowerCase(), saldo_minera: 0 }]);
+    }
 }
 
 function renderShop() {
     const grid = document.getElementById('gpu-grid');
     if(!grid) return;
-    grid.innerHTML = gpus.map((g, i) => {
-        const last = purchaseHistory[g.id];
-        const isLocked = last && (Date.now() - last < 10*24*60*60*1000);
-        return `<div class="gpu-item">
-            <img src="${g.img}" style="width:100%" onerror="this.src='https://via.placeholder.com/150?text=Dyno'">
+    grid.innerHTML = gpus.map((g, i) => `
+        <div class="gpu-item">
+            <img src="${g.img}" style="width:100%" onerror="this.src='https://via.placeholder.com/150?text=Error'">
             <h4>${g.nome}</h4>
             <p>${g.custo} $DYNO</p>
-            <button class="btn-buy" ${isLocked ? 'disabled' : `onclick="buyGPU(${i})"`}>
-                ${isLocked ? 'LOCKED' : 'ADQUIRIR'}
-            </button>
-        </div>`;
-    }).join('');
+            <button class="btn-buy" onclick="buyGPU(${i})">ADQUIRIR</button>
+        </div>
+    `).join('');
 }
 
 function updateUI() {
-    if(!userAccount) return;
     const visualGain = document.getElementById('visualGain');
     if(visualGain) visualGain.innerText = balance.toFixed(6);
-    
-    // Atualiza o link de indicação
-    const refLink = document.getElementById('refLink');
-    if(refLink) refLink.value = window.location.origin + window.location.pathname + "?ref=" + userAccount;
 }
 
-// --- INICIALIZAÇÃO ---
 window.onload = () => {
     initMatrix();
     setInterval(drawMatrix, 50);
     renderShop();
-    
-    // Auto-connect se já estiver logado na MetaMask
-    if (window.ethereum) {
-        window.ethereum.request({ method: 'eth_accounts' }).then(accs => {
-            if (accs.length > 0) connectWallet();
-        });
-    }
 };
-
 window.onresize = initMatrix;
