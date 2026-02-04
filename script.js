@@ -14,11 +14,11 @@ const tokenABI = [
 ];
 
 const gpus = [
-    { id: 1, nome: "Dyno Normal", custo: 50, lucro10d: 5, poder: 10, img: "NORMAL.png" },
-    { id: 2, nome: "Dyno Raro", custo: 150, lucro10d: 7, poder: 35, img: "RARO.png" },
-    { id: 3, nome: "Dyno Épico", custo: 300, lucro10d: 10, poder: 120, img: "ÉPICO.png" },
-    { id: 4, nome: "Dyno Lendário", custo: 600, lucro10d: 15, poder: 450, img: "LENDÁRIO.png" },
-    { id: 5, nome: "Super Lendário", custo: 1500, lucro10d: 25, poder: 1500, img: "SUPER LENDÁRIO.png" }
+    { id: 1, nome: "Dyno Normal", custo: 50, lucro10d: 5, poder: 10: "NORMAL.png" },
+    { id: 2, nome: "Dyno Raro", custo: 150, lucro10d: 7, poder: 35: "RARO.png" },
+    { id: 3, nome: "Dyno Épico", custo: 300, lucro10d: 10, poder: 120: "ÉPICO.png" },
+    { id: 4, nome: "Dyno Lendário", custo: 600, lucro10d: 15, poder: 450: "LENDÁRIO.png" },
+    { id: 5, nome: "Super Lendário", custo: 1500, lucro10d: 25, poder: 1500: "SUPER LENDÁRIO.png" }
 ];
 
 let userAccount = null, balance = 0.0, isMining = false, miningEndTime = null, purchaseHistory = {};
@@ -205,3 +205,4 @@ window.onload = () => {
     }
 };
 window.onresize = initMatrix;
+
