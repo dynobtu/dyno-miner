@@ -3,69 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dyno-Crypto | Terminal Pro</title>
+    <title>Dyno-Crypto V2.0 PRO</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script>
 </head>
 <body>
+
     <header>
         <canvas id="matrixCanvas"></canvas>
-        <div class="logo">🦖 DYNO-CRYPTO <span class="version">V2.0 PRO</span></div>
-        <div class="header-right">
-            <button class="btn-buy-header" onclick="window.open('https://pancakeswap.finance/swap?outputCurrency=0xDa9756415A5D92027d994Fd33aC1823bA2fdc9ED', '_blank')">OBTER $DYNO</button>
-            <div id="walletDisplay" class="wallet-pill">OFFLINE</div>
-            <button id="btnConnect" class="btn-connect" onclick="connectWallet()">CONECTAR</button>
+        <div class="header-content">
+            <div class="logo">🦖 DYNO-CRYPTO V2.0 PRO</div>
+            <div class="header-btns">
+                <button class="btn-secondary">OBTER $DYNO</button>
+                <span id="status" class="status-off">OFFLINE</span>
+                <button id="btnConnect" class="btn-connect" onclick="connectWallet()">
+                    <span id="walletDisplay">CONECTAR</span>
+                </button>
+            </div>
         </div>
     </header>
 
-    <div class="container">
-        <div class="top-stats">
+    <main class="container">
+        <section class="stats-grid">
             <div class="stat-card">
-                <small>SALDO MINERADO</small>
-                <div class="val"><span id="visualGain">0.000000</span> <span class="unit">$DYNO</span></div>
+                <p>SALDO MINERADO</p>
+                <h3><span id="visualGain">0.000000</span> $DYNO</h3>
             </div>
             <div class="stat-card">
-                <small>LUCRO INDICAÇÃO (5%)</small>
-                <div class="val"><span id="refEarnings">0.00</span> <span class="unit">$DYNO</span></div>
-                <div class="ref-sub">INDICADOS: <span id="refCount">0</span></div>
+                <p>LUCRO INDICAÇÃO (5%)</p>
+                <h3><span id="refEarnings">0.00</span> $DYNO</h3>
+                <small>INDICADOS: <span id="refCount">0</span></small>
             </div>
             <div class="stat-card">
-                <small>PODER DE HASH</small>
-                <div class="val"><span id="hashrate">0</span> <span class="unit">H/s</span></div>
+                <p>PODER DE HASH</p>
+                <h3><span id="hashrate">0</span> H/s</h3>
             </div>
             <div class="stat-card">
-                <small>SALDO EM CARTEIRA</small>
-                <div class="val"><span id="walletBalance">0.00</span> <span class="unit">$DYNO</span></div>
+                <p>SALDO EM CARTEIRA</p>
+                <h3><span id="walletBalance">0.00</span> $DYNO</h3>
             </div>
-        </div>
+        </section>
 
-        <div class="main-layout">
-            <aside class="sidebar">
-                <div class="control-panel">
-                    <h3>TERMINAL DE OPERAÇÃO</h3>
-                    <button id="btnActivate" class="btn-activate" onclick="activateMining()">⚡ ATIVAR MINERAÇÃO (24H)</button>
-                    <div class="timer-box">REATIVAR EM: <span id="activationTimer">00:00:00</span></div>
-                    <button class="btn-withdraw" onclick="withdrawGains()">🏧 SOLICITAR SAQUE (5% TAX)</button>
+        <div class="main-grid">
+            <aside class="controls">
+                <div class="panel">
+                    <h4>TERMINAL DE OPERAÇÃO</h4>
+                    <button id="btnActivate" class="btn-mine" onclick="activateMining()">⚡ ATIVAR MINERAÇÃO (24H)</button>
+                    <p class="timer">REATIVAR EM: <span id="activationTimer">00:00:00</span></p>
+                    <button class="btn-withdraw">🏧 SOLICITAR SAQUE (5% TAX)</button>
                 </div>
-                <div class="ref-panel">
-                    <h3>SISTEMA DE AFILIADOS</h3>
-                    <div class="ref-input-group">
-                        <input type="text" id="refLink" readonly value="Conecte para gerar link">
+
+                <div class="panel">
+                    <h4>SISTEMA DE AFILIADOS</h4>
+                    <div class="ref-box">
+                        <input type="text" id="refLink" readonly placeholder="Conecte para gerar link">
                         <button onclick="copyRef()">COPIAR</button>
                     </div>
                 </div>
-                <div class="inventory-panel">
-                    <h3>DYNOS EM OPERAÇÃO</h3>
-                    <div id="inventoryList" class="inv-scroll">Aguardando conexão...</div>
+
+                <div class="panel">
+                    <h4>DYNOS EM OPERAÇÃO</h4>
+                    <div id="inventoryList" class="inventory">Aguardando conexão...</div>
                 </div>
             </aside>
-            <main class="shop-area">
+
+            <section class="shop">
                 <h2 class="section-title">MERCADO DE HARDWARE</h2>
-                <div id="gpu-grid" class="gpu-grid"></div>
-            </main>
+                <div id="gpu-grid" class="gpu-grid">
+                    </div>
+            </section>
         </div>
-    </div>
+    </main>
+
     <script src="script.js"></script>
 </body>
 </html>
