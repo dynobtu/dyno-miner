@@ -1,54 +1,121 @@
-:root { --neon: #00ff41; --bg: #0a0a0a; --card: rgba(15, 15, 15, 0.95); --border: rgba(0, 255, 65, 0.2); }
-
-body { background: var(--bg); color: #fff; font-family: 'Courier New', monospace; margin: 0; }
-
-/* HEADER */
-header { 
-    position: relative; background: #000; height: 80px; 
-    display: flex; justify-content: space-between; align-items: center; 
-    padding: 0 5%; border-bottom: 2px solid var(--neon); overflow: hidden;
+/* --- ESTILO GLOBAL --- */
+body {
+    background-color: #000;
+    color: #00ff41;
+    font-family: 'Courier New', Courier, monospace;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
 }
-#matrixCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.6; }
-.logo, .header-right { position: relative; z-index: 1; }
-.logo { color: var(--neon); font-size: 1.4rem; font-weight: bold; text-shadow: 0 0 8px var(--neon); }
 
-/* BOTÕES E ELEMENTOS */
-.btn-buy-header { background: transparent; border: 1px solid var(--neon); color: var(--neon); padding: 8px 15px; cursor: pointer; font-weight: bold; margin-right: 10px; }
-.wallet-pill { background: #111; color: var(--neon); border: 1px solid var(--border); padding: 6px 15px; border-radius: 20px; font-size: 0.8rem; display: inline-block; }
-.btn-connect { background: #fff; color: #000; border: none; padding: 8px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; }
-
-/* LAYOUT */
-.container { max-width: 1300px; margin: 30px auto; padding: 0 20px; }
-.top-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 30px; }
-.stat-card { background: var(--card); border: 1px solid var(--border); padding: 18px; border-radius: 12px; }
-.stat-card small { color: var(--neon); font-size: 0.7rem; display: block; margin-bottom: 5px; letter-spacing: 1px; }
-.stat-card .val { font-size: 1.4rem; font-weight: bold; }
-
-.main-layout { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 50px; }
-.sidebar { flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 20px; }
-.shop-area { flex: 3; min-width: 350px; }
-
-/* CARDS */
-.control-panel, .ref-panel, .inventory-panel { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 15px; }
-h3 { font-size: 0.85rem; color: var(--neon); border-bottom: 1px solid var(--border); padding-bottom: 8px; margin: 0 0 15px 0; }
-
-.btn-activate { width: 100%; padding: 15px; background: var(--neon); color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-.timer-box { font-size: 0.8rem; text-align: center; color: #888; margin-top: 10px; }
-.btn-withdraw { width: 100%; margin-top: 15px; background: transparent; color: #fff; border: 1px solid #333; padding: 10px; border-radius: 5px; cursor: pointer; }
-
-/* GRID LOJA */
-.gpu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
-.gpu-item { background: var(--card); border: 1px solid var(--border); border-radius: 15px; padding: 15px; text-align: center; }
-.gpu-item img { width: 100%; height: 160px; object-fit: contain; margin-bottom: 10px; }
-.btn-buy { width: 100%; padding: 10px; background: transparent; color: var(--neon); border: 1px solid var(--neon); border-radius: 5px; cursor: pointer; font-weight: bold; }
-.btn-buy:disabled { border-color: #333; color: #555; cursor: not-allowed; }
-
-/* FOOTER PROFISSIONAL */
-.terminal-footer { 
-    margin-top: 50px; padding: 40px; background: rgba(5, 5, 5, 0.9); 
-    border-radius: 20px; border: 1px solid var(--border);
+/* --- HEADER & MATRIX --- */
+header {
+    position: relative;
+    height: 150px;
+    border-bottom: 2px solid #00ff41;
+    overflow: hidden;
 }
-.footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; }
-.footer-col h4 { color: var(--neon); font-size: 0.9rem; margin-bottom: 15px; border-left: 3px solid var(--neon); padding-left: 10px; }
-.footer-col p { font-size: 0.78rem; color: #aaa; line-height: 1.6; margin-bottom: 10px; }
-.footer-col strong { color: #fff; }
+
+#matrixCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+}
+
+.header-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.6);
+}
+
+/* --- DASHBOARD (BOXES DE SALDO) --- */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    padding: 20px;
+}
+
+.stat-card {
+    background: rgba(0, 40, 0, 0.3);
+    border: 1px solid #00ff41;
+    padding: 15px;
+    text-align: center;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
+}
+
+.stat-card h3 { margin: 10px 0; font-size: 1.5rem; }
+
+/* --- LAYOUT PRINCIPAL --- */
+.main-grid {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 20px;
+    padding: 20px;
+}
+
+.panel {
+    background: rgba(0, 20, 0, 0.5);
+    border: 1px solid #00ff41;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+}
+
+/* --- MERCADO DE HARDWARE --- */
+.gpu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+}
+
+.gpu-item {
+    border: 1px solid #00ff41;
+    padding: 10px;
+    text-align: center;
+    background: #000;
+    transition: 0.3s;
+}
+
+.gpu-item:hover {
+    box-shadow: 0 0 15px #00ff41;
+    transform: scale(1.02);
+}
+
+.gpu-item img {
+    max-width: 100%;
+    height: auto;
+    border-bottom: 1px solid #00ff41;
+    margin-bottom: 10px;
+}
+
+/* --- BOTÕES --- */
+button {
+    background: #00ff41;
+    color: #000;
+    border: none;
+    padding: 10px 15px;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+button:hover { background: #008f11; color: #fff; }
+
+.btn-mine {
+    width: 100%;
+    font-size: 1.1rem;
+    padding: 20px;
+    margin: 10px 0;
+}
+
+/* --- RESPONSIVIDADE --- */
+@media (max-width: 768px) {
+    .main-grid { grid-template-columns: 1fr; }
+}
