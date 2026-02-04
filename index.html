@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dyno-Crypto | Terminal Pro</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <header>
+        <canvas id="matrixCanvas"></canvas>
+        <div class="logo">🦖 DYNO-CRYPTO <span class="version">V2.0 PRO</span></div>
+        <div class="header-right">
+            <button class="btn-buy-header" onclick="window.open('https://pancakeswap.finance/swap?outputCurrency=0xDa9756415A5D92027d994Fd33aC1823bA2fdc9ED', '_blank')">OBTER $DYNO</button>
+            <div id="walletDisplay" class="wallet-pill">OFFLINE</div>
+            <button id="btnConnect" class="btn-connect" onclick="connectWallet()">CONECTAR</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="top-stats">
+            <div class="stat-card">
+                <small>SALDO MINERADO</small>
+                <div class="val"><span id="visualGain">0.000000</span> <span class="unit">$DYNO</span></div>
+            </div>
+            <div class="stat-card">
+                <small>LUCRO INDICAÇÃO (5%)</small>
+                <div class="val"><span id="refEarnings">0.00</span> <span class="unit">$DYNO</span></div>
+                <div class="ref-sub">INDICADOS: <span id="refCount">0</span></div>
+            </div>
+            <div class="stat-card">
+                <small>PODER DE HASH</small>
+                <div class="val"><span id="hashrate">0</span> <span class="unit">H/s</span></div>
+            </div>
+            <div class="stat-card">
+                <small>SALDO EM CARTEIRA</small>
+                <div class="val"><span id="walletBalance">0.00</span> <span class="unit">$DYNO</span></div>
+            </div>
+        </div>
+
+        <div class="main-layout">
+            <aside class="sidebar">
+                <div class="control-panel">
+                    <h3>TERMINAL DE OPERAÇÃO</h3>
+                    <button id="btnActivate" class="btn-activate" onclick="activateMining()">⚡ ATIVAR MINERAÇÃO (24H)</button>
+                    <div class="timer-box">REATIVAR EM: <span id="activationTimer">00:00:00</span></div>
+                    <button class="btn-withdraw" onclick="withdrawGains()">🏧 SOLICITAR SAQUE (5% TAX)</button>
+                </div>
+
+                <div class="ref-panel">
+                    <h3>SISTEMA DE AFILIADOS</h3>
+                    <p class="ref-info">Ganhe 5% sobre cada compra direta de seus indicados.</p>
+                    <div class="ref-input-group">
+                        <input type="text" id="refLink" readonly value="Conecte para gerar link">
+                        <button onclick="copyRef()">COPIAR</button>
+                    </div>
+                </div>
+
+                <div class="inventory-panel">
+                    <h3>DYNOS EM OPERAÇÃO</h3>
+                    <div id="inventoryList" class="inv-scroll">Aguardando conexão...</div>
+                </div>
+            </aside>
+
+            <main class="shop-area">
+                <h2 class="section-title">MERCADO DE HARDWARE</h2>
+                <div id="gpu-grid" class="gpu-grid"></div>
+            </main>
+        </div>
+
+        <footer class="terminal-footer">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h4>📝 REGRAS DO PROTOCOLO</h4>
+                    <p>• <strong>CICLO DE VIDA:</strong> Cada unidade Dyno opera por exatos 10 dias após a compra.</p>
+                    <p>• <strong>ATIVAÇÃO MANUAL:</strong> Os ganhos só são contabilizados se a mineração for ativada a cada 24 horas.</p>
+                    <p>• <strong>LIMITE DE AQUISIÇÃO:</strong> É permitido apenas 1 Dyno de cada modelo por carteira.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>🔐 SEGURANÇA E SAQUES</h4>
+                    <p>• <strong>CRIPTOGRAFIA:</strong> Dados sincronizados via Supabase Global DB.</p>
+                    <p>• <strong>VALORES:</strong> Saque mínimo de 50 $DYNO.</p>
+                    <p>• <strong>TAXAS:</strong> 5% para manutenção do protocolo.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>⚠️ AVISO LEGAL</h4>
+                    <p>• <strong>RISCO:</strong> O mercado cripto é volátil. Invista com consciência.</p>
+                    <p>• <strong>DIREITOS:</strong> &copy; 2026 DYNO-CRYPTO | Terminal Pro V2.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
