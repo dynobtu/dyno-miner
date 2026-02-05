@@ -16,27 +16,28 @@ const gpus = [
 
 let userAccount = null;
 let miningInterval = null;
+
+// CORREÇÃO: Carregar saldo salvo imediatamente ao abrir o script
 let visualBalance = parseFloat(localStorage.getItem('saved_mining_balance')) || 0;
 let purchaseHistory = JSON.parse(localStorage.getItem('dyno_purchases')) || {};
 let lastActivation = localStorage.getItem('last_mining_activation');
 
-// --- SISTEMA DE SAQUE SEGURO ---
+// --- SISTEMA DE SAQUE ---
 function solicitarSaque() {
     const minimo = 100;
     if (visualBalance < minimo) return alert(`Mínimo de ${minimo} $DYNO para saque!`);
-
     const taxa = visualBalance * 0.05;
     const liquido = visualBalance - taxa;
 
     if (confirm(`Deseja sacar ${visualBalance.toFixed(2)} $DYNO?\nTaxa (5%): ${taxa.toFixed(2)}\nVocê receberá: ${liquido.toFixed(2)}`)) {
-        alert("SOLICITAÇÃO ENVIADA! O valor será processado manualmente em até 24h.");
+        alert("SOLICITAÇÃO ENVIADA!");
         visualBalance = 0;
         localStorage.setItem('saved_mining_balance', 0);
         document.getElementById('visualGain').innerText = "0.000000";
     }
 }
 
-// --- MINERAÇÃO E CRONÔMETRO ---
+// --- MINERAÇÃO ---
 function calculateHourlyGain() {
     let total = 0;
     Object.keys(purchaseHistory).forEach(id => {
@@ -54,12 +55,14 @@ function updateTimer() {
 
     if (tempoRestante > 0) {
         btn.disabled = true;
+        btn.innerText = "MINERAÇÃO EM CURSO...";
         const h = Math.floor(tempoRestante / 3600000);
         const m = Math.floor((tempoRestante % 3600000) / 60000);
         const s = Math.floor((tempoRestante % 60000) / 1000);
         display.innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
     } else {
         btn.disabled = false;
+        btn.innerText = "⚡ ATIVAR MINERAÇÃO (24H)";
         display.innerText = "00:00:00";
     }
 }
@@ -75,34 +78,45 @@ function activateMining() {
 function startMiningVisuals() {
     const gainSec = calculateHourlyGain() / 3600;
     if(miningInterval) clearInterval(miningInterval);
+    
     miningInterval = setInterval(() => {
+        // CORREÇÃO: Garantir que o visualBalance some corretamente e salve no LocalStorage
         visualBalance += gainSec;
-        localStorage.setItem('saved_mining_balance', visualBalance);
+        localStorage.setItem('saved_mining_balance', visualBalance.toString());
+        
         document.getElementById('visualGain').innerText = visualBalance.toFixed(6);
         document.getElementById('hashrate').innerText = (gainSec * 360000).toFixed(0);
         updateTimer();
     }, 1000);
 }
 
-// --- FUNÇÕES DE CARTEIRA ---
+// --- CARTEIRA ---
 async function connectWallet() {
     if (window.ethereum) {
-        const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        userAccount = accs[0];
-        document.getElementById('walletDisplay').innerText = userAccount.substring(0,6) + "...";
-        await updateBalance();
-        updateRefUI();
-        renderShop();
-        if(lastActivation) startMiningVisuals();
+        try {
+            const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            userAccount = accs[0];
+            document.getElementById('walletDisplay').innerText = userAccount.substring(0,6) + "...";
+            await updateBalance();
+            updateRefUI();
+            renderShop();
+            
+            // Inicia o visual se houver uma ativação válida de 24h
+            if(lastActivation && (parseInt(lastActivation) + 86400000) > Date.now()) {
+                startMiningVisuals();
+            }
+        } catch (e) { console.error(e); }
     }
 }
 
 async function updateBalance() {
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const contract = new ethers.Contract(tokenAddr, tokenABI, provider);
-    const balance = await contract.balanceOf(userAccount);
-    const dec = await contract.decimals();
-    document.getElementById('walletBalance').innerText = parseFloat(ethers.utils.formatUnits(balance, dec)).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+    try {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const contract = new ethers.Contract(tokenAddr, tokenABI, provider);
+        const balance = await contract.balanceOf(userAccount);
+        const dec = await contract.decimals();
+        document.getElementById('walletBalance').innerText = parseFloat(ethers.utils.formatUnits(balance, dec)).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+    } catch(e) {}
 }
 
 async function buyGPU(index) {
@@ -123,12 +137,13 @@ async function buyGPU(index) {
 
 function renderShop() {
     const grid = document.getElementById('gpu-grid');
+    if(!grid) return;
     grid.innerHTML = gpus.map((g, i) => {
         const locked = purchaseHistory[g.id] && (Date.now() - purchaseHistory[g.id] < 864000000);
         return `
             <div class="gpu-item">
                 <div class="badge-profit">+${g.lucro}%</div>
-                <img src="${g.img}">
+                <img src="${g.img}" onerror="this.src='https://via.placeholder.com/150?text=DYNO'">
                 <h4>${g.nome}</h4>
                 <p>${g.custo} $DYNO</p>
                 <button onclick="buyGPU(${i})" ${locked ? 'disabled' : ''}>${locked ? 'LOCKED' : 'ADQUIRIR'}</button>
@@ -143,6 +158,7 @@ function updateRefUI() {
 
 function copyRefLink() {
     const input = document.getElementById("refLink");
+    if(!input.value) return;
     input.select();
     navigator.clipboard.writeText(input.value);
     alert("Copiado!");
@@ -154,6 +170,7 @@ function obterDyno() {
 
 function initMatrix() {
     const c = document.getElementById('matrixCanvas');
+    if(!c) return;
     const ctx = c.getContext('2d');
     c.width = window.innerWidth; c.height = 160;
     const drops = Array(Math.floor(c.width/14)).fill(1);
@@ -168,4 +185,9 @@ function initMatrix() {
     }, 50);
 }
 
-window.onload = () => { renderShop(); initMatrix(); document.getElementById('visualGain').innerText = visualBalance.toFixed(6); };
+window.onload = () => { 
+    renderShop(); 
+    initMatrix(); 
+    // CORREÇÃO: Exibir o saldo minerado salvo assim que a página carrega
+    document.getElementById('visualGain').innerText = visualBalance.toFixed(6);
+};
