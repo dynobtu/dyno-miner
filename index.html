@@ -1,55 +1,26 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dyno-Crypto V2.0 PRO</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-</head>
-<body>
-    <header>
-        <canvas id="matrixCanvas"></canvas>
-        <div class="header-content">
-            <div class="logo">🦖 DYNO-CRYPTO V2.0 PRO</div>
-            <div class="header-btns">
-                <button class="btn-secondary" onclick="obterDyno()">OBTER $DYNO</button>
-                <button id="btnConnect" class="btn-connect" onclick="connectWallet()">
-                    <span id="walletDisplay">CONECTAR</span>
-                </button>
-            </div>
-        </div>
-    </header>
+<section class="stats-grid">
+    <div class="stat-card"><p>SALDO MINERADO</p><h3><span id="visualGain">0.000000</span> $DYNO</h3></div>
+    <div class="stat-card">
+        <p>LUCRO INDICAÇÃO (5%)</p>
+        <h3><span id="refEarnings">0.00</span> $DYNO</h3>
+        <small>INDICADOS VALIDADOS: <span id="refCount">0</span></small>
+    </div>
+    <div class="stat-card"><p>PODER DE HASH</p><h3><span id="hashrate">0</span> H/s</h3></div>
+    <div class="stat-card"><p>SALDO EM CARTEIRA</p><h3><span id="walletBalance">0.00</span> $DYNO</h3></div>
+</section>
 
-    <main class="container">
-        <section class="stats-grid">
-            <div class="stat-card"><p>SALDO MINERADO</p><h3><span id="visualGain">0.000000</span> $DYNO</h3></div>
-            <div class="stat-card"><p>PODER DE HASH</p><h3><span id="hashrate">0</span> H/s</h3></div>
-            <div class="stat-card"><p>SALDO EM CARTEIRA</p><h3><span id="walletBalance">0.00</span> $DYNO</h3></div>
-        </section>
+<aside class="controls">
+    <div class="panel">
+        <h4>TERMINAL DE OPERAÇÃO</h4>
+        <button id="btnActivate" class="btn-mine" onclick="activateMining()">⚡ ATIVAR MINERAÇÃO (24H)</button>
+        <p class="timer">REATIVAR EM: <span id="activationTimer">00:00:00</span></p>
+        <button class="btn-withdraw" onclick="solicitarSaque()">🏧 SOLICITAR SAQUE</button>
+    </div>
 
-        <div class="main-grid">
-            <aside class="controls">
-                <div class="panel">
-                    <h4>TERMINAL DE OPERAÇÃO</h4>
-                    <button id="btnActivate" class="btn-mine" onclick="activateMining()">⚡ ATIVAR MINERAÇÃO (24H)</button>
-                    <p class="timer">REATIVAR EM: <span id="activationTimer">00:00:00</span></p>
-                    <button class="btn-withdraw" onclick="alert('Mínimo 50 $DYNO para saque')">🏧 SOLICITAR SAQUE</button>
-                </div>
-            </aside>
-            <section class="shop">
-                <h2 class="section-title">MERCADO DE HARDWARE</h2>
-                <div id="gpu-grid" class="gpu-grid"></div>
-            </section>
-        </div>
-    </main>
-
-    <footer class="footer-pro">
-        <p class="warning-text">⚠️ <strong>AVISO LEGAL:</strong> Mercado de alto risco. +18 anos.</p>
-        <p class="rules-text">⏳ COMPRA: 10 DIAS | ⚡ ATIVAÇÃO: 24H | 🏧 SAQUE MÍN: 50 $DYNO</p>
-    </footer>
-
-    <div id="notification-container"></div>
-    <script src="script.js"></script>
-</body>
-</html>
+    <div class="panel">
+        <h4>SISTEMA DE AFILIADOS</h4>
+        <input type="text" id="refLink" readonly placeholder="Conecte para gerar link" 
+               style="width:100%; background:#000; color:#00ff41; border:1px solid #00ff41; padding:5px; margin-bottom:10px;">
+        <button onclick="copyRefLink()" class="btn-secondary" style="width:100%">COPIAR LINK</button>
+    </div>
+</aside>
