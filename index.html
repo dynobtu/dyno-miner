@@ -15,7 +15,7 @@
             <div class="header-btns">
                 <button class="btn-secondary" onclick="obterDyno()">OBTER $DYNO</button>
                 <button id="btnConnect" class="btn-connect" onclick="connectWallet()">
-                    <span id="walletDisplay">CONECTAR</span>
+                    <span id="walletDisplay">CONECTAR CARTEIRA</span>
                 </button>
             </div>
         </div>
@@ -44,6 +44,7 @@
 
                 <div class="panel">
                     <h4>SISTEMA DE AFILIADOS</h4>
+                    <p style="font-size: 0.7rem; margin-bottom: 5px;">SEU LINK DE INDICAÇÃO:</p>
                     <input type="text" id="refLink" readonly placeholder="Conecte para gerar link">
                     <button onclick="copyRefLink()" class="btn-secondary" style="width:100%; margin-top:10px;">COPIAR LINK</button>
                 </div>
@@ -55,6 +56,42 @@
             </section>
         </div>
     </main>
+
+    <footer class="footer-pro">
+        <div class="footer-grid">
+            <div class="footer-column">
+                <h4>📋 REGRAS DE OPERAÇÃO</h4>
+                <ul>
+                    <li>Ciclo de vida do hardware: 10 dias.</li>
+                    <li>Limite: 1 unidade por modelo a cada ciclo.</li>
+                    <li>Ganhos vinculados à ativação diária (24h).</li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>👥 AFILIADOS</h4>
+                <ul>
+                    <li>5% de comissão sobre compras de indicados.</li>
+                    <li>Validação após 1ª compra do indicado.</li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>🏧 FINANCEIRO</h4>
+                <ul>
+                    <li>Saque mínimo: 100 $DYNO.</li>
+                    <li>Taxa de rede: 5% (Fundo de Sustentação).</li>
+                </ul>
+            </div>
+            <div class="footer-column disclaimer">
+                <h4>⚠️ AVISO LEGAL</h4>
+                <p>Mercado volátil. Sem garantia de lucro. +18 anos.</p>
+            </div>
+        </div>
+        <div class="footer-copyright">
+            <p>© 2026 DYNO-CRYPTO V2.0 PRO. Todos os direitos reservados.</p>
+            <p style="font-size: 0.6rem; opacity: 0.5;">O uso não autorizado desta interface resultará em medidas legais.</p>
+        </div>
+    </footer>
+
     <script src="script.js"></script>
 </body>
 </html>
