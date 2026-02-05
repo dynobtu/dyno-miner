@@ -27,7 +27,7 @@
             <div class="stat-card">
                 <p>LUCRO INDICAÇÃO (5%)</p>
                 <h3><span id="refEarnings">0.00</span> $DYNO</h3>
-                <small style="font-size: 0.7rem;">INDICADOS: <span id="refCount">0</span></small>
+                <small>INDICADOS: <span id="refCount">0</span></small>
             </div>
             <div class="stat-card"><p>PODER DE HASH</p><h3><span id="hashrate">0</span> H/s</h3></div>
             <div class="stat-card"><p>SALDO EM CARTEIRA</p><h3><span id="walletBalance">0.00</span> $DYNO</h3></div>
@@ -39,14 +39,13 @@
                     <h4>TERMINAL DE OPERAÇÃO</h4>
                     <button id="btnActivate" class="btn-mine" onclick="activateMining()">⚡ ATIVAR MINERAÇÃO (24H)</button>
                     <p class="timer">REATIVAR EM: <span id="activationTimer">00:00:00</span></p>
-                    <button class="btn-withdraw" onclick="alert('Saque mínimo: 50 $DYNO')">🏧 SOLICITAR SAQUE</button>
+                    <button class="btn-withdraw" onclick="solicitarSaque()">🏧 SOLICITAR SAQUE</button>
                 </div>
 
                 <div class="panel">
                     <h4>SISTEMA DE AFILIADOS</h4>
-                    <input type="text" id="refLink" readonly placeholder="Conecte para gerar link" 
-                           style="width:100%; background:#000; color:#00ff41; border:1px solid #00ff41; padding:8px; margin:10px 0; font-family:monospace; font-size:0.8rem;">
-                    <button onclick="copyRefLink()" class="btn-secondary" style="width:100%">COPIAR LINK</button>
+                    <input type="text" id="refLink" readonly placeholder="Conecte para gerar link">
+                    <button onclick="copyRefLink()" class="btn-secondary" style="width:100%; margin-top:10px;">COPIAR LINK</button>
                 </div>
             </aside>
 
@@ -56,13 +55,6 @@
             </section>
         </div>
     </main>
-
-    <footer class="footer-pro">
-        <p style="color:#ff4141; font-size:0.8rem;">⚠️ AVISO: Mercado volátil. Invista com cautela.</p>
-        <p>COOLDOWN: 10 DIAS | CICLO: 24 HORAS | TAXA SAQUE: 5%</p>
-    </footer>
-
-    <div id="notification-container"></div>
     <script src="script.js"></script>
 </body>
 </html>
