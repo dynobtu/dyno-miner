@@ -1,10 +1,6 @@
 const receptor = "0xe097661503B830ae10e91b01885a4b767A0e9107";
 const tokenAddr = "0xDa9756415A5D92027d994Fd33aC1823bA2fdc9ED";
-const tokenABI = [
-    "function transfer(address to, uint256 amount) public returns (bool)",
-    "function balanceOf(address account) view returns (uint256)",
-    "function decimals() view returns (uint8)"
-];
+const tokenABI = ["function transfer(address to, uint256 amount) public returns (bool)","function balanceOf(address account) view returns (uint256)","function decimals() view returns (uint8)"];
 
 const gpus = [
     { id: 1, nome: "Dyno Normal", custo: "100", lucro: 5, img: "NORMAL.png" },
@@ -16,28 +12,10 @@ const gpus = [
 
 let userAccount = null;
 let miningInterval = null;
-
-// CORREÇÃO: Carregar saldo salvo imediatamente ao abrir o script
 let visualBalance = parseFloat(localStorage.getItem('saved_mining_balance')) || 0;
 let purchaseHistory = JSON.parse(localStorage.getItem('dyno_purchases')) || {};
 let lastActivation = localStorage.getItem('last_mining_activation');
 
-// --- SISTEMA DE SAQUE ---
-function solicitarSaque() {
-    const minimo = 100;
-    if (visualBalance < minimo) return alert(`Mínimo de ${minimo} $DYNO para saque!`);
-    const taxa = visualBalance * 0.05;
-    const liquido = visualBalance - taxa;
-
-    if (confirm(`Deseja sacar ${visualBalance.toFixed(2)} $DYNO?\nTaxa (5%): ${taxa.toFixed(2)}\nVocê receberá: ${liquido.toFixed(2)}`)) {
-        alert("SOLICITAÇÃO ENVIADA!");
-        visualBalance = 0;
-        localStorage.setItem('saved_mining_balance', 0);
-        document.getElementById('visualGain').innerText = "0.000000";
-    }
-}
-
-// --- MINERAÇÃO ---
 function calculateHourlyGain() {
     let total = 0;
     Object.keys(purchaseHistory).forEach(id => {
@@ -55,21 +33,19 @@ function updateTimer() {
 
     if (tempoRestante > 0) {
         btn.disabled = true;
-        btn.innerText = "MINERAÇÃO EM CURSO...";
         const h = Math.floor(tempoRestante / 3600000);
         const m = Math.floor((tempoRestante % 3600000) / 60000);
         const s = Math.floor((tempoRestante % 60000) / 1000);
         display.innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
     } else {
         btn.disabled = false;
-        btn.innerText = "⚡ ATIVAR MINERAÇÃO (24H)";
         display.innerText = "00:00:00";
     }
 }
 
 function activateMining() {
     if(!userAccount) return alert("Conecte a carteira!");
-    if(calculateHourlyGain() <= 0) return alert("Compre um Dyno primeiro!");
+    if(calculateHourlyGain() <= 0) return alert("Compre um Dyno no Mercado!");
     lastActivation = Date.now();
     localStorage.setItem('last_mining_activation', lastActivation);
     startMiningVisuals();
@@ -78,45 +54,35 @@ function activateMining() {
 function startMiningVisuals() {
     const gainSec = calculateHourlyGain() / 3600;
     if(miningInterval) clearInterval(miningInterval);
-    
     miningInterval = setInterval(() => {
-        // CORREÇÃO: Garantir que o visualBalance some corretamente e salve no LocalStorage
         visualBalance += gainSec;
         localStorage.setItem('saved_mining_balance', visualBalance.toString());
-        
         document.getElementById('visualGain').innerText = visualBalance.toFixed(6);
         document.getElementById('hashrate').innerText = (gainSec * 360000).toFixed(0);
         updateTimer();
     }, 1000);
 }
 
-// --- CARTEIRA ---
-async function connectWallet() {
-    if (window.ethereum) {
-        try {
-            const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            userAccount = accs[0];
-            document.getElementById('walletDisplay').innerText = userAccount.substring(0,6) + "...";
-            await updateBalance();
-            updateRefUI();
-            renderShop();
-            
-            // Inicia o visual se houver uma ativação válida de 24h
-            if(lastActivation && (parseInt(lastActivation) + 86400000) > Date.now()) {
-                startMiningVisuals();
-            }
-        } catch (e) { console.error(e); }
+function solicitarSaque() {
+    if (visualBalance < 100) return alert("Saque mínimo: 100 $DYNO!");
+    const liquido = visualBalance * 0.95;
+    if (confirm(`Sacar ${visualBalance.toFixed(2)} $DYNO?\nLíquido após 5% de taxa: ${liquido.toFixed(2)}`)) {
+        alert("Solicitação enviada para análise!");
+        visualBalance = 0;
+        localStorage.setItem('saved_mining_balance', "0");
+        document.getElementById('visualGain').innerText = "0.000000";
     }
 }
 
-async function updateBalance() {
-    try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const contract = new ethers.Contract(tokenAddr, tokenABI, provider);
-        const balance = await contract.balanceOf(userAccount);
-        const dec = await contract.decimals();
-        document.getElementById('walletBalance').innerText = parseFloat(ethers.utils.formatUnits(balance, dec)).toLocaleString('pt-BR', {minimumFractionDigits: 2});
-    } catch(e) {}
+async function connectWallet() {
+    if (window.ethereum) {
+        const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        userAccount = accs[0];
+        document.getElementById('walletDisplay').innerText = userAccount.substring(0,6) + "...";
+        updateRefUI();
+        renderShop();
+        if(lastActivation && (parseInt(lastActivation) + 86400000) > Date.now()) startMiningVisuals();
+    }
 }
 
 async function buyGPU(index) {
@@ -131,23 +97,21 @@ async function buyGPU(index) {
         purchaseHistory[gpu.id] = Date.now();
         localStorage.setItem('dyno_purchases', JSON.stringify(purchaseHistory));
         renderShop();
-        alert("Sucesso!");
-    } catch (e) { alert("Erro na compra."); }
+        alert("Dyno Adquirido!");
+    } catch (e) { alert("Erro na transação."); }
 }
 
 function renderShop() {
     const grid = document.getElementById('gpu-grid');
-    if(!grid) return;
     grid.innerHTML = gpus.map((g, i) => {
         const locked = purchaseHistory[g.id] && (Date.now() - purchaseHistory[g.id] < 864000000);
-        return `
-            <div class="gpu-item">
-                <div class="badge-profit">+${g.lucro}%</div>
-                <img src="${g.img}" onerror="this.src='https://via.placeholder.com/150?text=DYNO'">
-                <h4>${g.nome}</h4>
-                <p>${g.custo} $DYNO</p>
-                <button onclick="buyGPU(${i})" ${locked ? 'disabled' : ''}>${locked ? 'LOCKED' : 'ADQUIRIR'}</button>
-            </div>`;
+        return `<div class="gpu-item">
+            <div class="badge-profit">+${g.lucro}%</div>
+            <img src="${g.img}">
+            <h4>${g.nome}</h4>
+            <p>${g.custo} $DYNO</p>
+            <button onclick="buyGPU(${i})" ${locked ? 'disabled' : ''}>${locked ? 'LOCKED' : 'ADQUIRIR'}</button>
+        </div>`;
     }).join('');
 }
 
@@ -158,19 +122,15 @@ function updateRefUI() {
 
 function copyRefLink() {
     const input = document.getElementById("refLink");
-    if(!input.value) return;
     input.select();
     navigator.clipboard.writeText(input.value);
-    alert("Copiado!");
+    alert("Link Copiado!");
 }
 
-function obterDyno() {
-    window.open("https://pancakeswap.finance/swap?chain=bsc&inputCurrency=0x55d398326f99059fF775485246999027B3197955&outputCurrency=0xDa9756415A5D92027d994Fd33aC1823bA2fdc9ED", "_blank");
-}
+function obterDyno() { window.open("https://pancakeswap.finance/swap?chain=bsc&inputCurrency=0x55d398326f99059fF775485246999027B3197955&outputCurrency=0xDa9756415A5D92027d994Fd33ac1823bA2fdc9ED", "_blank"); }
 
 function initMatrix() {
     const c = document.getElementById('matrixCanvas');
-    if(!c) return;
     const ctx = c.getContext('2d');
     c.width = window.innerWidth; c.height = 160;
     const drops = Array(Math.floor(c.width/14)).fill(1);
@@ -185,9 +145,4 @@ function initMatrix() {
     }, 50);
 }
 
-window.onload = () => { 
-    renderShop(); 
-    initMatrix(); 
-    // CORREÇÃO: Exibir o saldo minerado salvo assim que a página carrega
-    document.getElementById('visualGain').innerText = visualBalance.toFixed(6);
-};
+window.onload = () => { renderShop(); initMatrix(); document.getElementById('visualGain').innerText = visualBalance.toFixed(6); };
