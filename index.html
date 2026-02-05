@@ -15,7 +15,7 @@
         <div class="header-content">
             <div class="logo">🦖 DYNO-CRYPTO V2.0 PRO</div>
             <div class="header-btns">
-                <button class="btn-secondary">OBTER $DYNO</button>
+                <button class="btn-secondary" onclick="obterDyno()">OBTER $DYNO</button>
                 <span id="status" class="status-off">OFFLINE</span>
                 <button id="btnConnect" class="btn-connect" onclick="connectWallet()">
                     <span id="walletDisplay">CONECTAR</span>
@@ -40,7 +40,7 @@
                 <h3><span id="hashrate">0</span> H/s</h3>
             </div>
             <div class="stat-card">
-                <p>SALDO EM CARTEIRA</p>
+                <p>SALDO EM CARTEIRA (METAMASK)</p>
                 <h3><span id="walletBalance">0.00</span> $DYNO</h3>
             </div>
         </section>
@@ -51,7 +51,7 @@
                     <h4>TERMINAL DE OPERAÇÃO</h4>
                     <button id="btnActivate" class="btn-mine" onclick="activateMining()">⚡ ATIVAR MINERAÇÃO (24H)</button>
                     <p class="timer">REATIVAR EM: <span id="activationTimer">00:00:00</span></p>
-                    <button class="btn-withdraw">🏧 SOLICITAR SAQUE (5% TAX)</button>
+                    <button class="btn-withdraw" onclick="solicitarSaque()">🏧 SOLICITAR SAQUE (MIN. 50)</button>
                 </div>
 
                 <div class="panel">
@@ -70,11 +70,17 @@
 
             <section class="shop">
                 <h2 class="section-title">MERCADO DE HARDWARE</h2>
-                <div id="gpu-grid" class="gpu-grid">
-                    </div>
+                <div id="gpu-grid" class="gpu-grid"></div>
             </section>
         </div>
     </main>
+
+    <footer style="padding: 20px; text-align: center; font-size: 0.8rem; color: #888; border-top: 1px solid #00ff41; margin-top: 40px; background: #000;">
+        <p>⚠️ <strong>AVISO DE RISCO:</strong> O mercado de criptomoedas é altamente volátil. Invista apenas o que pode perder. 🔞 Maiores de 18 anos.</p>
+        <p><strong>REGRAS:</strong> Compra de Dyno a cada 10 dias | Ativação manual a cada 24h | Saque mín. 50 $DYNO (Taxa 5%).</p>
+    </footer>
+
+    <div id="notification-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;"></div>
 
     <script src="script.js"></script>
 </body>
