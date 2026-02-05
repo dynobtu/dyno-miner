@@ -1,8 +1,5 @@
-// CONFIGURAÇÕES GERAIS
 const receptor = "0xe097661503B830ae10e91b01885a4b767A0e9107";
 const tokenAddr = "0xDa9756415A5D92027d994Fd33aC1823bA2fdc9ED";
-
-// ABI LEGÍVEL (Suficiente para saldo e transferência)
 const tokenABI = [
     "function transfer(address to, uint256 amount) public returns (bool)",
     "function balanceOf(address account) view returns (uint256)",
@@ -19,46 +16,48 @@ const gpus = [
 
 let userAccount = null;
 let purchaseHistory = JSON.parse(localStorage.getItem('dyno_purchases')) || {};
+let referrer = new URLSearchParams(window.location.search).get('ref');
 
-// FUNÇÃO PARA ATUALIZAR O SALDO NA TELA
 async function updateBalance() {
     if (!userAccount) return;
     try {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const contract = new ethers.Contract(tokenAddr, tokenABI, provider);
-        
         const balanceBN = await contract.balanceOf(userAccount);
         const decimals = await contract.decimals();
-        const formattedBalance = ethers.utils.formatUnits(balanceBN, decimals);
-
-        // Atualiza o card "SALDO EM CARTEIRA"
-        const balanceElement = document.getElementById('walletBalance');
-        if (balanceElement) {
-            balanceElement.innerText = parseFloat(formattedBalance).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        }
-    } catch (e) {
-        console.error("Erro ao buscar saldo:", e);
-    }
+        document.getElementById('walletBalance').innerText = ethers.utils.formatUnits(balanceBN, decimals);
+    } catch (e) { console.error(e); }
 }
 
-// CONECTAR CARTEIRA (FORÇA POPUP)
+function updateRefUI() {
+    if (!userAccount) return;
+    const link = window.location.origin + window.location.pathname + "?ref=" + userAccount;
+    document.getElementById('refLink').value = link;
+}
+
+function copyRefLink() {
+    const input = document.getElementById("refLink");
+    if(!input.value) return alert("Conecte a carteira!");
+    input.select();
+    document.execCommand("copy");
+    alert("Link de indicação copiado!");
+}
+
 async function connectWallet() {
     if (window.ethereum) {
         try {
             const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
             userAccount = accs[0];
             document.getElementById('walletDisplay').innerText = userAccount.substring(0,6) + "...";
-            
-            await updateBalance(); // Busca o saldo logo após conectar
+            await updateBalance();
+            updateRefUI();
             renderShop();
-            alert("CONECTADO E SALDO ATUALIZADO!");
-        } catch (e) { alert("CONEXÃO RECUSADA!"); }
-    } else { alert("INSTALE A METAMASK!"); }
+        } catch (e) { alert("Conexão recusada!"); }
+    } else { alert("Instale a MetaMask!"); }
 }
 
-// COMPRAR COM AUTORIZAÇÃO REAL
 async function buyGPU(index) {
-    if(!userAccount) return alert("CONECTE A CARTEIRA PRIMEIRO!");
+    if(!userAccount) return alert("Conecte a carteira!");
     const gpu = gpus[index];
     
     try {
@@ -67,22 +66,27 @@ async function buyGPU(index) {
         const contract = new ethers.Contract(tokenAddr, tokenABI, signer);
         const amount = ethers.utils.parseUnits(gpu.custo, 18);
 
-        alert("SOLICITANDO PAGAMENTO DE " + gpu.custo + " $DYNO...");
         const tx = await contract.transfer(receptor, amount);
-        await tx.wait(); 
+        alert("Processando compra...");
+        await tx.wait();
+
+        // Lógica de Bônus 5%
+        if (referrer && referrer.toLowerCase() !== userAccount.toLowerCase()) {
+            const bonus = parseFloat(gpu.custo) * 0.05;
+            console.log("Bônus registrado para " + referrer + ": " + bonus + " $DYNO");
+            // Nota: Amanhã integraremos isso ao Banco de Dados para somar no painel do padrinho
+        }
 
         purchaseHistory[gpu.id] = Date.now();
         localStorage.setItem('dyno_purchases', JSON.stringify(purchaseHistory));
-        
-        await updateBalance(); // Atualiza saldo após a compra
-        alert("COMPRA REALIZADA COM SUCESSO!");
+        await updateBalance();
         renderShop();
-    } catch (e) { alert("FALHA NA TRANSAÇÃO!"); }
+        alert("Sucesso! Hardware adquirido.");
+    } catch (e) { alert("Transação falhou."); }
 }
 
 function renderShop() {
     const grid = document.getElementById('gpu-grid');
-    if (!grid) return;
     grid.innerHTML = gpus.map((g, i) => {
         const locked = purchaseHistory[g.id] && (Date.now() - purchaseHistory[g.id] < 10*24*60*60*1000);
         return `
@@ -90,21 +94,20 @@ function renderShop() {
                 <img src="${g.img}" onerror="this.src='https://via.placeholder.com/150?text=DYNO'">
                 <h4>${g.nome}</h4>
                 <p>${g.custo} $DYNO</p>
-                <button onclick="buyGPU(${i})" ${locked ? 'disabled' : ''}>
+                <button onclick="buyGPU(${i})" ${locked ? 'disabled' : ''} 
+                        style="background: ${locked ? '#333' : '#00ff41'}">
                     ${locked ? 'LOCKED' : 'ADQUIRIR'}
                 </button>
             </div>`;
     }).join('');
 }
 
-// MATRIX EFFECT E LINKS
 function obterDyno() {
     window.open("https://pancakeswap.finance/swap?chain=bsc&inputCurrency=0x55d398326f99059fF775485246999027B3197955&outputCurrency=0xDa9756415A5D92027d994Fd33aC1823bA2fdc9ED", "_blank");
 }
 
 function initMatrix() {
     const c = document.getElementById('matrixCanvas');
-    if (!c) return;
     const ctx = c.getContext('2d');
     c.width = window.innerWidth; c.height = 160;
     const drops = Array(Math.floor(c.width/14)).fill(1);
