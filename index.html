@@ -14,7 +14,7 @@
         <div class="header-content">
             <div class="logo">🦖 DYNO-CRYPTO V2.0 PRO</div>
             <div class="header-btns">
-                <button class="btn-secondary" onclick="window.open('https://pancakeswap.finance', '_blank')">OBTER $DYNO</button>
+                <button class="btn-secondary" onclick="obterDyno()">OBTER $DYNO</button>
                 <button id="btnConnect" class="btn-connect" onclick="connectWallet()">
                     <span id="walletDisplay">CONECTAR</span>
                 </button>
@@ -45,12 +45,12 @@
         </div>
     </main>
 
-    <footer style="padding: 40px 20px; text-align: center; background: #000; border-top: 1px solid #00ff41; margin-top: 50px;">
-        <p style="color: #ff4141; font-size: 0.8rem; max-width: 800px; margin: 0 auto 15px;">⚠️ <strong>AVISO LEGAL:</strong> O mercado de criptomoedas é arriscado. Invista apenas o que pode perder. Conteúdo para +18 anos.</p>
-        <p style="color: #00ff41; font-weight: bold; font-size: 0.9rem;">⏳ COMPRA: 10 DIAS | ⚡ ATIVAÇÃO: 24H | 🏧 SAQUE MÍN: 50 $DYNO</p>
+    <footer class="footer-pro">
+        <p class="warning-text">⚠️ <strong>AVISO LEGAL:</strong> O mercado de criptomoedas é arriscado. Invista apenas o que pode perder. Conteúdo para +18 anos.</p>
+        <p class="rules-text">⏳ COMPRA: 10 DIAS | ⚡ ATIVAÇÃO: 24H | 🏧 SAQUE MÍN: 50 $DYNO</p>
     </footer>
 
-    <div id="notification-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;"></div>
+    <div id="notification-container"></div>
     <script src="script.js"></script>
 </body>
 </html>
