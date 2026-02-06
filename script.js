@@ -1,4 +1,4 @@
-// CONFIGURAÇÕES BÁSICAS
+// --- CONFIGURAÇÕES ---
 const SUPABASE_URL = 'https://tdzwbddisdrikzztqoze.supabase.co'; 
 const SUPABASE_KEY = 'sb_publishable_BcNbL1tcyFRTpBRqAxgaEw_4Wq7o-tY'; 
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -25,7 +25,7 @@ let visualBalance = parseFloat(localStorage.getItem('saved_mining_balance')) || 
 let purchaseHistory = JSON.parse(localStorage.getItem('dyno_purchases')) || {};
 let lastActivation = localStorage.getItem('last_mining_activation');
 
-// MOTOR DE MINERAÇÃO
+// --- MOTOR DE MINERAÇÃO ---
 function calculateHourlyGain() {
     let total = 0;
     Object.keys(purchaseHistory).forEach(id => {
@@ -42,25 +42,14 @@ function startMiningVisuals() {
         if (gainSec > 0) {
             visualBalance += gainSec;
             localStorage.setItem('saved_mining_balance', visualBalance.toString());
-            if(document.getElementById('visualGain')) document.getElementById('visualGain').innerText = visualBalance.toFixed(6);
+            const display = document.getElementById('visualGain');
+            if(display) display.innerText = visualBalance.toFixed(6);
         }
         updateTimer();
     }, 1000);
 }
 
-// INTERFACE
-async function atualizarDadosInterface() {
-    if (!userAccount) return;
-    try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const contract = new ethers.Contract(tokenAddr, tokenABI, provider);
-        const balance = await contract.balanceOf(userAccount);
-        document.getElementById('walletBalance').innerText = parseFloat(ethers.utils.formatUnits(balance, 18)).toFixed(2);
-        document.getElementById('refLink').value = window.location.origin + window.location.pathname + '?ref=' + userAccount.toLowerCase();
-        document.getElementById('hashrate').innerText = (calculateHourlyGain() * 100).toFixed(0) + ' H/s';
-    } catch (e) { console.error(e); }
-}
-
+// --- INTERFACE ---
 function renderShop() {
     const grid = document.getElementById('gpu-grid');
     if(!grid) return;
@@ -78,7 +67,19 @@ function renderShop() {
     grid.innerHTML = html;
 }
 
-// BOTÕES
+async function atualizarDadosInterface() {
+    if (!userAccount) return;
+    try {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const contract = new ethers.Contract(tokenAddr, tokenABI, provider);
+        const balance = await contract.balanceOf(userAccount);
+        document.getElementById('walletBalance').innerText = parseFloat(ethers.utils.formatUnits(balance, 18)).toFixed(2);
+        document.getElementById('refLink').value = window.location.origin + window.location.pathname + '?ref=' + userAccount.toLowerCase();
+        document.getElementById('hashrate').innerText = (calculateHourlyGain() * 100).toFixed(0) + ' H/s';
+    } catch (e) { console.error(e); }
+}
+
+// --- BOTÕES ---
 async function connectWallet() {
     if (window.ethereum) {
         const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
@@ -107,22 +108,6 @@ async function solicitarSaque() {
         document.getElementById('visualGain').innerText = '0.000000';
         alert('Saque solicitado!');
     }
-}
-
-async function buyGPU(index) {
-    if(!userAccount) return alert('Conecte a carteira!');
-    const gpu = gpus[index];
-    try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const signer = provider.getSigner();
-        const contract = new ethers.Contract(tokenAddr, tokenABI, signer);
-        const tx = await contract.transfer(receptor, ethers.utils.parseUnits(gpu.custo, 18));
-        await tx.wait();
-        purchaseHistory[gpu.id] = Date.now();
-        localStorage.setItem('dyno_purchases', JSON.stringify(purchaseHistory));
-        renderShop();
-        atualizarDadosInterface();
-    } catch (e) { alert('Erro na transação.'); }
 }
 
 function updateTimer() {
