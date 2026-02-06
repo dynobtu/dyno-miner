@@ -1,4 +1,4 @@
-// --- 1. CONFIGURAÇÕES E CONEXÕES ---
+// --- 1. CONFIGURAÇÕES ---
 const SUPABASE_URL = 'https://tdzwbddisdrikzztqoze.supabase.co'; 
 const SUPABASE_KEY = 'sb_publishable_BcNbL1tcyFRTpBRqAxgaEw_4Wq7o-tY'; 
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -19,7 +19,7 @@ const gpus = [
     { id: 5, nome: "Super Lendário", custo: "1600", lucro: 25, img: "SUPER LENDÁRIO.png" }
 ];
 
-// --- 2. VARIÁVEIS DE ESTADO ---
+// --- 2. ESTADO ---
 let userAccount = null;
 let miningInterval = null;
 let visualBalance = parseFloat(localStorage.getItem('saved_mining_balance')) || 0;
@@ -41,13 +41,12 @@ function calculateHourlyGain() {
 function checkOfflineMining() {
     if (!lastActivation || calculateHourlyGain() <= 0) return;
     const agora = Date.now();
-    const fimMineracao = parseInt(lastActivation) + 86400000;
-    const limiteCalculo = agora > fimMineracao ? fimMineracao : agora;
-    const tempoPassadoSms = limiteCalculo - parseInt(lastTimestamp);
+    const fim = parseInt(lastActivation) + 86400000;
+    const limite = agora > fim ? fim : agora;
+    const tempoPassado = limite - parseInt(lastTimestamp);
     
-    if (tempoPassadoSms > 0) {
-        const ganhoOffline = (calculateHourlyGain() / 3600) * (tempoPassadoSms / 1000);
-        visualBalance += ganhoOffline;
+    if (tempoPassado > 0) {
+        visualBalance += (calculateHourlyGain() / 3600) * (tempoPassado / 1000);
         localStorage.setItem('saved_mining_balance', visualBalance.toString());
     }
     localStorage.setItem('last_timestamp', agora.toString());
@@ -56,121 +55,113 @@ function checkOfflineMining() {
 function startMiningVisuals() {
     if(miningInterval) clearInterval(miningInterval);
     checkOfflineMining();
-
-    const gainSec = calculateHourlyGain() / 3600;
     miningInterval = setInterval(() => {
+        const gainSec = calculateHourlyGain() / 3600;
         if (gainSec > 0) {
             visualBalance += gainSec;
             localStorage.setItem('saved_mining_balance', visualBalance.toString());
             localStorage.setItem('last_timestamp', Date.now().toString());
-            const display = document.getElementById('visualGain');
-            if(display) display.innerText = visualBalance.toFixed(6);
-            const hashDisplay = document.getElementById('hashrate');
-            if(hashDisplay) hashDisplay.innerText = (gainSec * 360000).toFixed(0) + " H/s";
+            document.getElementById('visualGain').innerText = visualBalance.toFixed(6);
+            document.getElementById('hashrate').innerText = (gainSec * 360000).toFixed(0) + " H/s";
         }
         updateTimer();
     }, 1000);
 }
 
-// --- 4. AÇÕES E TRAVAS ---
+// --- 4. COMPRA E INDICAÇÃO ---
 
-function activateMining() {
-    if(!userAccount) return alert("Conecte a carteira!");
-    if(calculateHourlyGain() <= 0) return alert("Compre uma máquina primeiro!");
-    
-    // Trava de segurança: não deixa ativar se já houver um ciclo ativo
-    const tempoRestante = (parseInt(lastActivation) + 86400000) - Date.now();
-    if (tempoRestante > 0) return alert("A mineração já está em curso!");
-
-    lastActivation = Date.now();
-    lastTimestamp = Date.now();
-    localStorage.setItem('last_mining_activation', lastActivation);
-    localStorage.setItem('last_timestamp', lastTimestamp);
-    
-    startMiningVisuals();
-    alert("Mineração iniciada por 24h!");
-}
-
-function updateTimer() {
-    if (!lastActivation) return;
-    const tempoRestante = (parseInt(lastActivation) + 86400000) - Date.now();
-    const display = document.getElementById('activationTimer');
-    const btn = document.getElementById('btnActivate'); // Certifique-se que seu botão no HTML tem esse ID
-
-    if (tempoRestante > 0) {
-        // Bloqueia o botão e muda o visual
-        if(btn) {
-            btn.disabled = true;
-            btn.innerText = "MINERANDO...";
-            btn.style.opacity = "0.5";
-            btn.style.cursor = "not-allowed";
+async function buyGPU(index) {
+    if(!userAccount) return alert("Conecte a carteira primeiro!");
+    const gpu = gpus[index];
+    try {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const contract = new ethers.Contract(tokenAddr, tokenABI, signer);
+        
+        // Enviar transação
+        const tx = await contract.transfer(receptor, ethers.utils.parseUnits(gpu.custo, 18));
+        alert("Aguardando confirmação da rede...");
+        await tx.wait();
+        
+        // Registrar compra localmente
+        purchaseHistory[gpu.id] = Date.now();
+        localStorage.setItem('dyno_purchases', JSON.stringify(purchaseHistory));
+        
+        // Tentar registrar indicação no Supabase se houver ref na URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const ref = urlParams.get('ref');
+        if (ref && ref.toLowerCase() !== userAccount.toLowerCase()) {
+            await _supabase.from('indicacoes').insert([{ padrinho: ref.toLowerCase(), filho: userAccount.toLowerCase(), valor: gpu.custo }]);
         }
-        const h = Math.floor(tempoRestante / 3600000), m = Math.floor((tempoRestante % 3600000) / 60000), s = Math.floor((tempoRestante % 60000) / 1000);
-        if(display) display.innerText = h.toString().padStart(2,'0') + ":" + m.toString().padStart(2,'0') + ":" + s.toString().padStart(2,'0');
-    } else {
-        // Libera o botão
-        if(btn) {
-            btn.disabled = false;
-            btn.innerText = "ATIVAR MINERAÇÃO (24H)";
-            btn.style.opacity = "1";
-            btn.style.cursor = "pointer";
-        }
-        if(display) display.innerText = "00:00:00";
-        if(miningInterval) clearInterval(miningInterval);
+
+        renderShop();
+        alert("Dyno adquirido com sucesso!");
+    } catch (e) { 
+        console.error(e);
+        alert("Erro na transação. Verifique seu saldo de $DYNO."); 
     }
 }
 
-async function solicitarSaque() {
-    if(!userAccount) return alert("Conecte sua carteira!");
-    if(visualBalance < 100) return alert("Saque mínimo de 100 $DYNO!");
-    try {
-        const { error } = await _supabase.from('saques_pendentes').insert([{ 
-            carteira_usuario: userAccount.toLowerCase(), 
-            valor_solicitado: visualBalance 
-        }]);
-        if (!error) {
-            visualBalance = 0;
-            localStorage.setItem('saved_mining_balance', "0");
-            document.getElementById('visualGain').innerText = "0.000000";
-            alert("Saque solicitado!");
-        }
-    } catch (e) { alert("Erro no saque."); }
+function updateRefLink() {
+    const input = document.getElementById('refLink');
+    if (userAccount && input) {
+        const link = window.location.origin + window.location.pathname + "?ref=" + userAccount.toLowerCase();
+        input.value = link;
+    }
 }
 
 // --- 5. INTERFACE ---
-
-function renderShop() {
-    const grid = document.getElementById('gpu-grid');
-    if(!grid) return;
-    grid.innerHTML = gpus.map((g, i) => {
-        const locked = purchaseHistory[g.id];
-        return `<div class="gpu-item">
-            <div class="badge-profit">+${g.lucro}%</div>
-            <img src="${g.img}">
-            <h4>${g.nome}</h4>
-            <p>${g.custo} $DYNO</p>
-            <button onclick="buyGPU(${i})" ${locked ? 'disabled' : ''}>${locked ? 'LOCKED' : 'ADQUIRIR'}</button>
-        </div>`;
-    }).join('');
-}
 
 async function connectWallet() {
     if (window.ethereum) {
         const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
         userAccount = accs[0];
-        const display = document.getElementById('walletDisplay');
-        if(display) display.innerText = userAccount.substring(0,6) + "...";
+        document.getElementById('walletDisplay').innerText = userAccount.substring(0,6) + "...";
+        
+        // Atualiza tudo após conectar
+        updateRefLink(); 
         renderShop();
+        
         if(lastActivation && (parseInt(lastActivation) + 86400000) > Date.now()) {
             startMiningVisuals();
         }
     }
 }
 
+function renderShop() {
+    const grid = document.getElementById('gpu-grid');
+    if(!grid) return;
+    grid.innerHTML = gpus.map((g, i) => {
+        const isBought = purchaseHistory[g.id];
+        return `
+            <div class="gpu-item">
+                <div class="badge-profit">+${g.lucro}%</div>
+                <img src="${g.img}">
+                <h4>${g.nome}</h4>
+                <p>${g.custo} $DYNO</p>
+                <button onclick="buyGPU(${i})" ${isBought ? 'disabled' : ''}>
+                    ${isBought ? 'LOCKED' : 'ADQUIRIR'}
+                </button>
+            </div>`;
+    }).join('');
+}
+
+function updateTimer() {
+    if (!lastActivation) return;
+    const tempo = (parseInt(lastActivation) + 86400000) - Date.now();
+    const display = document.getElementById('activationTimer');
+    const btn = document.getElementById('btnActivate');
+    if (tempo > 0) {
+        if(btn) { btn.disabled = true; btn.innerText = "MINERANDO..."; }
+        const h = Math.floor(tempo / 3600000), m = Math.floor((tempo % 3600000) / 60000), s = Math.floor((tempo % 60000) / 1000);
+        if(display) display.innerText = h.toString().padStart(2,'0') + ":" + m.toString().padStart(2,'0') + ":" + s.toString().padStart(2,'0');
+    } else {
+        if(btn) { btn.disabled = false; btn.innerText = "ATIVAR MINERAÇÃO"; }
+    }
+}
+
 window.onload = () => { 
     renderShop(); 
-    const balDisplay = document.getElementById('visualGain');
-    if(balDisplay) balDisplay.innerText = visualBalance.toFixed(6);
-    // Inicia o timer para verificar se o botão deve estar bloqueado logo ao abrir
-    setInterval(updateTimer, 1000); 
+    document.getElementById('visualGain').innerText = visualBalance.toFixed(6);
+    setInterval(updateTimer, 1000);
 };
