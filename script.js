@@ -19,7 +19,7 @@ const gpus = [
     { id: 5, nome: "Super Lendário", custo: "1600", lucro: 25, img: "SUPER LENDÁRIO.png" }
 ];
 
-// --- 2. ESTADO ---
+// --- 2. VARIÁVEIS DE ESTADO ---
 let userAccount = null;
 let miningInterval = null;
 let visualBalance = parseFloat(localStorage.getItem('saved_mining_balance')) || 0;
@@ -27,78 +27,21 @@ let purchaseHistory = JSON.parse(localStorage.getItem('dyno_purchases')) || {};
 let lastActivation = localStorage.getItem('last_mining_activation');
 let lastTimestamp = localStorage.getItem('last_timestamp') || Date.now();
 
-// --- 3. LÓGICA DE MINERAÇÃO ---
+// --- 3. FUNÇÕES DE CARTEIRA E SALDO ---
 
-function calculateHourlyGain() {
-    let total = 0;
-    Object.keys(purchaseHistory).forEach(id => {
-        const gpu = gpus.find(g => g.id == id);
-        if (gpu) total += ((parseFloat(gpu.custo) * (1 + gpu.lucro/100)) / 10) / 24;
-    });
-    return total;
-}
-
-function checkOfflineMining() {
-    if (!lastActivation || calculateHourlyGain() <= 0) return;
-    const agora = Date.now();
-    const fim = parseInt(lastActivation) + 86400000;
-    const limite = agora > fim ? fim : agora;
-    const tempoPassado = limite - parseInt(lastTimestamp);
-    
-    if (tempoPassado > 0) {
-        visualBalance += (calculateHourlyGain() / 3600) * (tempoPassado / 1000);
-        localStorage.setItem('saved_mining_balance', visualBalance.toString());
-    }
-    localStorage.setItem('last_timestamp', agora.toString());
-}
-
-function startMiningVisuals() {
-    if(miningInterval) clearInterval(miningInterval);
-    checkOfflineMining();
-    miningInterval = setInterval(() => {
-        const gainSec = calculateHourlyGain() / 3600;
-        if (gainSec > 0) {
-            visualBalance += gainSec;
-            localStorage.setItem('saved_mining_balance', visualBalance.toString());
-            localStorage.setItem('last_timestamp', Date.now().toString());
-            document.getElementById('visualGain').innerText = visualBalance.toFixed(6);
-            document.getElementById('hashrate').innerText = (gainSec * 360000).toFixed(0) + " H/s";
-        }
-        updateTimer();
-    }, 1000);
-}
-
-// --- 4. COMPRA E INDICAÇÃO ---
-
-async function buyGPU(index) {
-    if(!userAccount) return alert("Conecte a carteira primeiro!");
-    const gpu = gpus[index];
+async function atualizarSaldoCarteira() {
+    if (!userAccount || !window.ethereum) return;
     try {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const signer = provider.getSigner();
-        const contract = new ethers.Contract(tokenAddr, tokenABI, signer);
+        const contract = new ethers.Contract(tokenAddr, tokenABI, provider);
+        const balance = await contract.balanceOf(userAccount);
+        const decimals = await contract.decimals();
+        const saldoFormatado = ethers.utils.formatUnits(balance, decimals);
         
-        // Enviar transação
-        const tx = await contract.transfer(receptor, ethers.utils.parseUnits(gpu.custo, 18));
-        alert("Aguardando confirmação da rede...");
-        await tx.wait();
-        
-        // Registrar compra localmente
-        purchaseHistory[gpu.id] = Date.now();
-        localStorage.setItem('dyno_purchases', JSON.stringify(purchaseHistory));
-        
-        // Tentar registrar indicação no Supabase se houver ref na URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const ref = urlParams.get('ref');
-        if (ref && ref.toLowerCase() !== userAccount.toLowerCase()) {
-            await _supabase.from('indicacoes').insert([{ padrinho: ref.toLowerCase(), filho: userAccount.toLowerCase(), valor: gpu.custo }]);
-        }
-
-        renderShop();
-        alert("Dyno adquirido com sucesso!");
-    } catch (e) { 
-        console.error(e);
-        alert("Erro na transação. Verifique seu saldo de $DYNO."); 
+        const display = document.getElementById('walletBalance');
+        if(display) display.innerText = parseFloat(saldoFormatado).toFixed(2);
+    } catch (e) {
+        console.error("Erro ao carregar saldo:", e);
     }
 }
 
@@ -110,21 +53,50 @@ function updateRefLink() {
     }
 }
 
-// --- 5. INTERFACE ---
+// --- 4. COMPRA E MINERAÇÃO ---
+
+async function buyGPU(index) {
+    if(!userAccount) return alert("Conecte a carteira primeiro!");
+    const gpu = gpus[index];
+    try {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const contract = new ethers.Contract(tokenAddr, tokenABI, signer);
+        
+        const tx = await contract.transfer(receptor, ethers.utils.parseUnits(gpu.custo, 18));
+        alert("Aguardando confirmação da rede...");
+        await tx.wait();
+        
+        purchaseHistory[gpu.id] = Date.now();
+        localStorage.setItem('dyno_purchases', JSON.stringify(purchaseHistory));
+        
+        renderShop();
+        await atualizarSaldoCarteira();
+        alert("Dyno Adquirido com sucesso!");
+    } catch (e) {
+        alert("Erro na transação. Verifique seu saldo de $DYNO e a rede conectada.");
+    }
+}
+
+// --- 5. INICIALIZAÇÃO ---
 
 async function connectWallet() {
     if (window.ethereum) {
-        const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        userAccount = accs[0];
-        document.getElementById('walletDisplay').innerText = userAccount.substring(0,6) + "...";
-        
-        // Atualiza tudo após conectar
-        updateRefLink(); 
-        renderShop();
-        
-        if(lastActivation && (parseInt(lastActivation) + 86400000) > Date.now()) {
-            startMiningVisuals();
-        }
+        try {
+            const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            userAccount = accs[0];
+            document.getElementById('walletDisplay').innerText = userAccount.substring(0,6) + "...";
+            
+            updateRefLink(); 
+            await atualizarSaldoCarteira();
+            renderShop();
+            
+            if(lastActivation && (parseInt(lastActivation) + 86400000) > Date.now()) {
+                startMiningVisuals();
+            }
+        } catch (err) { alert("Falha ao conectar carteira."); }
+    } else {
+        alert("MetaMask não encontrada!");
     }
 }
 
@@ -132,36 +104,23 @@ function renderShop() {
     const grid = document.getElementById('gpu-grid');
     if(!grid) return;
     grid.innerHTML = gpus.map((g, i) => {
-        const isBought = purchaseHistory[g.id];
+        const locked = purchaseHistory[g.id];
         return `
             <div class="gpu-item">
                 <div class="badge-profit">+${g.lucro}%</div>
                 <img src="${g.img}">
                 <h4>${g.nome}</h4>
                 <p>${g.custo} $DYNO</p>
-                <button onclick="buyGPU(${i})" ${isBought ? 'disabled' : ''}>
-                    ${isBought ? 'LOCKED' : 'ADQUIRIR'}
+                <button onclick="buyGPU(${i})" ${locked ? 'disabled' : ''}>
+                    ${locked ? 'LOCKED' : 'ADQUIRIR'}
                 </button>
             </div>`;
     }).join('');
 }
 
-function updateTimer() {
-    if (!lastActivation) return;
-    const tempo = (parseInt(lastActivation) + 86400000) - Date.now();
-    const display = document.getElementById('activationTimer');
-    const btn = document.getElementById('btnActivate');
-    if (tempo > 0) {
-        if(btn) { btn.disabled = true; btn.innerText = "MINERANDO..."; }
-        const h = Math.floor(tempo / 3600000), m = Math.floor((tempo % 3600000) / 60000), s = Math.floor((tempo % 60000) / 1000);
-        if(display) display.innerText = h.toString().padStart(2,'0') + ":" + m.toString().padStart(2,'0') + ":" + s.toString().padStart(2,'0');
-    } else {
-        if(btn) { btn.disabled = false; btn.innerText = "ATIVAR MINERAÇÃO"; }
-    }
-}
-
 window.onload = () => { 
     renderShop(); 
-    document.getElementById('visualGain').innerText = visualBalance.toFixed(6);
-    setInterval(updateTimer, 1000);
+    if(document.getElementById('visualGain')) {
+        document.getElementById('visualGain').innerText = visualBalance.toFixed(6);
+    }
 };
