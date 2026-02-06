@@ -1,6 +1,7 @@
 // --- CONFIGURAÇÃO SUPABASE ---
+// Usando sua URL e Chave Publishable confirmadas nos prints
 const SUPABASE_URL = 'https://tdzwbddisdrikzztqoze.supabase.co'; 
-const SUPABASE_KEY = 'sb_publishable_BcNbL1tcyFRTpBRqAxgaEw_4Wq7o-tY'; // Sua chave publishable
+const SUPABASE_KEY = 'sb_publishable_BcNbL1tcyFRTpBRqAxgaEw_4Wq7o-tY'; 
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // --- CONFIGURAÇÕES DO CONTRATO ---
@@ -27,46 +28,46 @@ let visualBalance = parseFloat(localStorage.getItem('saved_mining_balance')) || 
 let purchaseHistory = JSON.parse(localStorage.getItem('dyno_purchases')) || {};
 let lastActivation = localStorage.getItem('last_mining_activation');
 
-// --- 1. FUNÇÕES DO SUPABASE (BANCO DE DADOS) ---
+// --- 1. FUNÇÕES DO BANCO DE DADOS (SUPABASE) ---
 
-// Busca o saldo de indicação e quantidade de indicados
-async function carregarDadosIndicacao() {
+async function carregarDadosBanco() {
     if (!userAccount) return;
-    try {
-        const { data, error } = await _supabase
-            .from('usuarios')
-            .select('ref_count, ref_earnings')
-            .eq('carteira', userAccount.toLowerCase())
-            .single();
+    const wallet = userAccount.toLowerCase().trim();
+    
+    // Busca os dados na tabela 'usuarios' que você criou
+    const { data, error } = await _supabase
+        .from('usuarios')
+        .select('ref_count, ref_earnings')
+        .eq('carteira', wallet)
+        .single();
 
-        if (data) {
-            document.getElementById('refCount').innerText = data.ref_count || 0;
-            document.getElementById('refEarnings').innerText = (data.ref_earnings || 0).toFixed(2);
-        }
-    } catch (e) { console.error("Erro ao carregar dados do banco:", e); }
+    if (data) {
+        document.getElementById('refCount').innerText = data.ref_count || 0;
+        document.getElementById('refEarnings').innerText = (data.ref_earnings || 0).toFixed(2);
+    }
 }
 
-// Registra o bônus de 5% para o padrinho
 async function registrarCompraNoBanco(valorGasto) {
     const urlParams = new URLSearchParams(window.location.search);
     const padrinho = urlParams.get('ref');
 
+    // Só processa se o padrinho existir e não for o próprio usuário
     if (padrinho && padrinho.toLowerCase() !== userAccount.toLowerCase()) {
-        const bonus = valorGasto * 0.05;
-        // Chama a função RPC que você criou no SQL Editor
+        const bonus = parseFloat(valorGasto) * 0.05;
+        // Ativa a Stored Procedure que você configurou
         await _supabase.rpc('incrementar_indicacao', { 
-            alvo: padrinho.toLowerCase(), 
+            alvo: padrinho.toLowerCase().trim(), 
             bonus: bonus 
         });
     }
 }
 
-// Grava a solicitação de saque na tabela 'saques_pendentes'
 async function registrarSaqueNoBanco(valor) {
+    // Insere na tabela de saques que confirmamos a criação
     const { error } = await _supabase
         .from('saques_pendentes')
         .insert([{ 
-            carteira_usuario: userAccount, 
+            carteira_usuario: userAccount.toLowerCase(), 
             valor_solicitado: valor, 
             status: 'pendente' 
         }]);
@@ -106,7 +107,7 @@ async function connectWallet() {
             userAccount = accs[0];
             document.getElementById('walletDisplay').innerText = userAccount.substring(0,6) + "...";
             
-            await carregarDadosIndicacao(); // Carrega indicações ao conectar
+            await carregarDadosBanco(); 
             updateRefUI();
             renderShop();
             
@@ -114,6 +115,15 @@ async function connectWallet() {
                 startMiningVisuals();
             }
         } catch (e) { console.error(e); }
+    }
+}
+
+function updateRefUI() {
+    const input = document.getElementById('refLink');
+    if (userAccount && input) {
+        const wallet = userAccount.toLowerCase().trim();
+        // Corrige a geração do link para não enviar caracteres inválidos
+        input.value = `${window.location.origin}${window.location.pathname}?ref=${wallet}`;
     }
 }
 
@@ -126,29 +136,29 @@ async function buyGPU(index) {
         const contract = new ethers.Contract(tokenAddr, tokenABI, signer);
         const tx = await contract.transfer(receptor, ethers.utils.parseUnits(gpu.custo, 18));
         
-        alert("Aguardando confirmação da rede...");
         await tx.wait();
         
-        await registrarCompraNoBanco(parseFloat(gpu.custo)); // Envia bônus para o Supabase
+        await registrarCompraNoBanco(gpu.custo);
 
         purchaseHistory[gpu.id] = Date.now();
         localStorage.setItem('dyno_purchases', JSON.stringify(purchaseHistory));
         renderShop();
-        alert("Compra realizada e bônus de indicação processado!");
-    } catch (e) { alert("Erro na transação."); }
+        await carregarDadosBanco(); 
+        alert("Sucesso!");
+    } catch (e) { alert("Erro na compra."); }
 }
 
 async function solicitarSaque() {
     if (visualBalance < 100) return alert("Saque mínimo: 100 $DYNO!");
     const liquido = visualBalance * 0.95;
 
-    if (confirm(`Confirmar saque de ${visualBalance.toFixed(2)} $DYNO?\nLíquido (taxa 5%): ${liquido.toFixed(2)}`)) {
-        const error = await registrarSaqueNoBanco(liquido); // Salva na tabela do print
+    if (confirm(`Confirmar saque de ${visualBalance.toFixed(2)} $DYNO?\nLíquido: ${liquido.toFixed(2)}`)) {
+        const error = await registrarSaqueNoBanco(liquido);
         
         if (error) {
-            alert("Erro ao salvar pedido no banco.");
+            alert("Erro ao salvar no banco. Verifique as permissões SQL.");
         } else {
-            alert("SOLICITAÇÃO REGISTRADA COM SUCESSO!");
+            alert("SOLICITAÇÃO REGISTRADA!");
             visualBalance = 0;
             localStorage.setItem('saved_mining_balance', 0);
             document.getElementById('visualGain').innerText = "0.000000";
@@ -156,7 +166,7 @@ async function solicitarSaque() {
     }
 }
 
-// --- 4. UTILITÁRIOS ---
+// --- 4. INTERFACE E UTILITÁRIOS ---
 
 function updateTimer() {
     if (!lastActivation) return;
@@ -178,7 +188,7 @@ function updateTimer() {
 
 function activateMining() {
     if(!userAccount) return alert("Conecte a carteira!");
-    if(calculateHourlyGain() <= 0) return alert("Você precisa de um Dyno para minerar!");
+    if(calculateHourlyGain() <= 0) return alert("Compre um Dyno primeiro!");
     lastActivation = Date.now();
     localStorage.setItem('last_mining_activation', lastActivation);
     startMiningVisuals();
@@ -200,13 +210,9 @@ function renderShop() {
     }).join('');
 }
 
-function updateRefUI() {
-    const input = document.getElementById('refLink');
-    if (userAccount && input) input.value = window.location.origin + window.location.pathname + "?ref=" + userAccount;
-}
-
 function copyRefLink() {
     const input = document.getElementById("refLink");
+    if(!input.value) return;
     input.select();
     navigator.clipboard.writeText(input.value);
     alert("Copiado!");
