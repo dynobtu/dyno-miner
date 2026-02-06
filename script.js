@@ -27,7 +27,7 @@ let purchaseHistory = JSON.parse(localStorage.getItem('dyno_purchases')) || {};
 let lastActivation = localStorage.getItem('last_mining_activation');
 let lastTimestamp = localStorage.getItem('last_timestamp') || Date.now();
 
-// --- 3. LÓGICA DE MINERAÇÃO (AGORA COM OFFLINE) ---
+// --- 3. LÓGICA DE MINERAÇÃO ---
 
 function calculateHourlyGain() {
     let total = 0;
@@ -40,11 +40,9 @@ function calculateHourlyGain() {
 
 function checkOfflineMining() {
     if (!lastActivation || calculateHourlyGain() <= 0) return;
-    
     const agora = Date.now();
     const fimMineracao = parseInt(lastActivation) + 86400000;
     const limiteCalculo = agora > fimMineracao ? fimMineracao : agora;
-    
     const tempoPassadoSms = limiteCalculo - parseInt(lastTimestamp);
     
     if (tempoPassadoSms > 0) {
@@ -57,7 +55,7 @@ function checkOfflineMining() {
 
 function startMiningVisuals() {
     if(miningInterval) clearInterval(miningInterval);
-    checkOfflineMining(); // Calcula o que rendeu enquanto estava fechado
+    checkOfflineMining();
 
     const gainSec = calculateHourlyGain() / 3600;
     miningInterval = setInterval(() => {
@@ -65,104 +63,81 @@ function startMiningVisuals() {
             visualBalance += gainSec;
             localStorage.setItem('saved_mining_balance', visualBalance.toString());
             localStorage.setItem('last_timestamp', Date.now().toString());
-            document.getElementById('visualGain').innerText = visualBalance.toFixed(6);
-            document.getElementById('hashrate').innerText = (gainSec * 360000).toFixed(0) + " H/s";
+            const display = document.getElementById('visualGain');
+            if(display) display.innerText = visualBalance.toFixed(6);
+            const hashDisplay = document.getElementById('hashrate');
+            if(hashDisplay) hashDisplay.innerText = (gainSec * 360000).toFixed(0) + " H/s";
         }
         updateTimer();
     }, 1000);
 }
 
-// --- 4. AÇÃO DE SAQUE (ADICIONADA) ---
-
-async function solicitarSaque() {
-    if(!userAccount) return alert("Conecte sua carteira primeiro!");
-    if(visualBalance < 100) return alert("Saque mínimo de 100 $DYNO!");
-
-    try {
-        const { error } = await _supabase.from('saques_pendentes').insert([{ 
-            carteira_usuario: userAccount.toLowerCase(), 
-            valor_solicitado: visualBalance 
-        }]);
-
-        if (!error) {
-            visualBalance = 0;
-            localStorage.setItem('saved_mining_balance', "0");
-            document.getElementById('visualGain').innerText = "0.000000";
-            alert("Solicitação de saque enviada com sucesso!");
-        } else {
-            alert("Erro ao enviar para o banco de dados.");
-        }
-    } catch (e) {
-        alert("Erro na conexão com o servidor.");
-    }
-}
-
-// --- 5. RESTANTE DAS FUNÇÕES (IGUAIS ÀS SUAS) ---
-
-async function atualizarSaldoCarteira() {
-    if (!userAccount || !window.ethereum) return;
-    try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const contract = new ethers.Contract(tokenAddr, tokenABI, provider);
-        const balance = await contract.balanceOf(userAccount);
-        const decimals = await contract.decimals();
-        document.getElementById('walletBalance').innerText = parseFloat(ethers.utils.formatUnits(balance, decimals)).toFixed(2);
-    } catch (e) { console.error("Erro saldo:", e); }
-}
-
-async function connectWallet() {
-    if (window.ethereum) {
-        const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        userAccount = accs[0];
-        document.getElementById('walletDisplay').innerText = userAccount.substring(0,6) + "...";
-        await atualizarSaldoCarteira();
-        renderShop();
-        if(lastActivation && (parseInt(lastActivation) + 86400000) > Date.now()) {
-            startMiningVisuals();
-        }
-    }
-}
-
-async function buyGPU(index) {
-    if(!userAccount) return alert("Conecte a carteira!");
-    const gpu = gpus[index];
-    try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const signer = provider.getSigner();
-        const contract = new ethers.Contract(tokenAddr, tokenABI, signer);
-        const tx = await contract.transfer(receptor, ethers.utils.parseUnits(gpu.custo, 18));
-        await tx.wait();
-        purchaseHistory[gpu.id] = Date.now();
-        localStorage.setItem('dyno_purchases', JSON.stringify(purchaseHistory));
-        renderShop();
-        atualizarSaldoCarteira();
-        alert("Sucesso!");
-    } catch (e) { alert("Erro na transação."); }
-}
+// --- 4. AÇÕES E TRAVAS ---
 
 function activateMining() {
     if(!userAccount) return alert("Conecte a carteira!");
     if(calculateHourlyGain() <= 0) return alert("Compre uma máquina primeiro!");
+    
+    // Trava de segurança: não deixa ativar se já houver um ciclo ativo
+    const tempoRestante = (parseInt(lastActivation) + 86400000) - Date.now();
+    if (tempoRestante > 0) return alert("A mineração já está em curso!");
+
     lastActivation = Date.now();
     lastTimestamp = Date.now();
     localStorage.setItem('last_mining_activation', lastActivation);
     localStorage.setItem('last_timestamp', lastTimestamp);
+    
     startMiningVisuals();
-    alert("Mineração ativada!");
+    alert("Mineração iniciada por 24h!");
 }
 
 function updateTimer() {
     if (!lastActivation) return;
     const tempoRestante = (parseInt(lastActivation) + 86400000) - Date.now();
     const display = document.getElementById('activationTimer');
+    const btn = document.getElementById('btnActivate'); // Certifique-se que seu botão no HTML tem esse ID
+
     if (tempoRestante > 0) {
+        // Bloqueia o botão e muda o visual
+        if(btn) {
+            btn.disabled = true;
+            btn.innerText = "MINERANDO...";
+            btn.style.opacity = "0.5";
+            btn.style.cursor = "not-allowed";
+        }
         const h = Math.floor(tempoRestante / 3600000), m = Math.floor((tempoRestante % 3600000) / 60000), s = Math.floor((tempoRestante % 60000) / 1000);
-        display.innerText = h.toString().padStart(2,'0') + ":" + m.toString().padStart(2,'0') + ":" + s.toString().padStart(2,'0');
+        if(display) display.innerText = h.toString().padStart(2,'0') + ":" + m.toString().padStart(2,'0') + ":" + s.toString().padStart(2,'0');
     } else {
-        display.innerText = "00:00:00";
+        // Libera o botão
+        if(btn) {
+            btn.disabled = false;
+            btn.innerText = "ATIVAR MINERAÇÃO (24H)";
+            btn.style.opacity = "1";
+            btn.style.cursor = "pointer";
+        }
+        if(display) display.innerText = "00:00:00";
         if(miningInterval) clearInterval(miningInterval);
     }
 }
+
+async function solicitarSaque() {
+    if(!userAccount) return alert("Conecte sua carteira!");
+    if(visualBalance < 100) return alert("Saque mínimo de 100 $DYNO!");
+    try {
+        const { error } = await _supabase.from('saques_pendentes').insert([{ 
+            carteira_usuario: userAccount.toLowerCase(), 
+            valor_solicitado: visualBalance 
+        }]);
+        if (!error) {
+            visualBalance = 0;
+            localStorage.setItem('saved_mining_balance', "0");
+            document.getElementById('visualGain').innerText = "0.000000";
+            alert("Saque solicitado!");
+        }
+    } catch (e) { alert("Erro no saque."); }
+}
+
+// --- 5. INTERFACE ---
 
 function renderShop() {
     const grid = document.getElementById('gpu-grid');
@@ -179,7 +154,23 @@ function renderShop() {
     }).join('');
 }
 
+async function connectWallet() {
+    if (window.ethereum) {
+        const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        userAccount = accs[0];
+        const display = document.getElementById('walletDisplay');
+        if(display) display.innerText = userAccount.substring(0,6) + "...";
+        renderShop();
+        if(lastActivation && (parseInt(lastActivation) + 86400000) > Date.now()) {
+            startMiningVisuals();
+        }
+    }
+}
+
 window.onload = () => { 
     renderShop(); 
-    document.getElementById('visualGain').innerText = visualBalance.toFixed(6);
+    const balDisplay = document.getElementById('visualGain');
+    if(balDisplay) balDisplay.innerText = visualBalance.toFixed(6);
+    // Inicia o timer para verificar se o botão deve estar bloqueado logo ao abrir
+    setInterval(updateTimer, 1000); 
 };
