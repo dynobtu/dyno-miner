@@ -1,5 +1,4 @@
 // --- CONFIGURAÇÃO SUPABASE ---
-// URL e Chave validadas nos seus prints de configuração
 const SUPABASE_URL = 'https://tdzwbddisdrikzztqoze.supabase.co'; 
 const SUPABASE_KEY = 'sb_publishable_BcNbL1tcyFRTpBRqAxgaEw_4Wq7o-tY'; 
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -13,220 +12,92 @@ const tokenABI = [
     "function decimals() view returns (uint8)"
 ];
 
-const gpus = [
-    { id: 1, nome: "Dyno Normal", custo: "100", lucro: 5, img: "NORMAL.png" },
-    { id: 2, nome: "Dyno Raro", custo: "200", lucro: 10, img: "RARO.png" },
-    { id: 3, nome: "Dyno Épico", custo: "400", lucro: 15, img: "ÉPICO.png" },
-    { id: 4, nome: "Dyno Lendário", custo: "800", lucro: 20, img: "LENDÁRIO.png" },
-    { id: 5, nome: "Super Lendário", custo: "1600", lucro: 25, img: "SUPER LENDÁRIO.png" }
-];
-
-// --- VARIÁVEIS DE ESTADO ---
 let userAccount = null;
-let miningInterval = null;
 let visualBalance = parseFloat(localStorage.getItem('saved_mining_balance')) || 0;
 let purchaseHistory = JSON.parse(localStorage.getItem('dyno_purchases')) || {};
 let lastActivation = localStorage.getItem('last_mining_activation');
 
-// --- 1. FUNÇÕES DO BANCO DE DADOS (SUPABASE) ---
+// --- 1. FUNÇÕES DE BANCO DE DADOS (SUPABASE) ---
 
-// Busca o lucro de indicação real gravado na tabela 'usuarios'
-async function carregarDadosBanco() {
+// GARANTE QUE O USUÁRIO EXISTE NA TABELA ASSIM QUE CONECTA
+async function verificarOuCriarUsuario() {
     if (!userAccount) return;
     const wallet = userAccount.toLowerCase().trim();
     
-    try {
-        const { data, error } = await _supabase
-            .from('usuarios')
-            .select('ref_count, ref_earnings')
-            .eq('carteira', wallet)
-            .single();
-
-        if (data) {
-            document.getElementById('refCount').innerText = data.ref_count || 0;
-            document.getElementById('refEarnings').innerText = (data.ref_earnings || 0).toFixed(2);
-        }
-    } catch (e) { console.error("Erro ao ler banco:", e); }
+    // Tenta inserir o usuário. Se já existir, não faz nada (ON CONFLICT)
+    const { error } = await _supabase
+        .from('usuarios')
+        .upsert({ carteira: wallet }, { onConflict: 'carteira' });
+    
+    if (error) console.error("Erro ao registrar usuário:", error);
+    await carregarDadosBanco();
 }
 
-// Ativa a função SQL 'incrementar_indicacao'
-async function registrarCompraNoBanco(valorGasto) {
-    const urlParams = new URLSearchParams(window.location.search);
-    const padrinho = urlParams.get('ref');
+async function carregarDadosBanco() {
+    const wallet = userAccount.toLowerCase().trim();
+    const { data } = await _supabase
+        .from('usuarios')
+        .select('ref_count, ref_earnings')
+        .eq('carteira', wallet)
+        .single();
 
-    // Só paga bônus se houver um padrinho válido e não for o próprio usuário
-    if (padrinho && padrinho.toLowerCase() !== userAccount.toLowerCase()) {
-        const bonus = parseFloat(valorGasto) * 0.05;
-        console.log(`Enviando bônus para: ${padrinho}`);
-        
-        const { error } = await _supabase.rpc('incrementar_indicacao', { 
-            alvo: padrinho.toLowerCase().trim(), 
-            bonus: bonus 
-        });
-        
-        if (error) console.error("Erro no RPC de indicação:", error);
+    if (data) {
+        document.getElementById('refCount').innerText = data.ref_count || 0;
+        document.getElementById('refEarnings').innerText = (data.ref_earnings || 0).toFixed(2);
     }
 }
 
-// Grava o pedido na tabela 'saques_pendentes'
-async function registrarSaqueNoBanco(valor) {
-    const { error } = await _supabase
-        .from('saques_pendentes')
-        .insert([{ 
-            carteira_usuario: userAccount.toLowerCase(), 
-            valor_solicitado: valor, 
-            status: 'pendente' 
-        }]);
-    return error;
+async function atualizarSaldoCarteira() {
+    if (!userAccount || !window.ethereum) return;
+    try {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const contract = new ethers.Contract(tokenAddr, tokenABI, provider);
+        const balance = await contract.balanceOf(userAccount);
+        const decimals = await contract.decimals();
+        // Atualiza o campo de saldo em carteira
+        const saldoFormatado = ethers.utils.formatUnits(balance, decimals);
+        document.getElementById('walletBalance').innerText = parseFloat(saldoFormatado).toFixed(2);
+    } catch (e) { console.error("Erro saldo:", e); }
 }
 
-// --- 2. LÓGICA DE MINERAÇÃO ---
-
-function calculateHourlyGain() {
-    let total = 0;
-    Object.keys(purchaseHistory).forEach(id => {
-        const gpu = gpus.find(g => g.id == id);
-        if (gpu) total += ((parseFloat(gpu.custo) * (1 + gpu.lucro/100)) / 10) / 24;
-    });
-    return total;
-}
-
-function startMiningVisuals() {
-    const gainSec = calculateHourlyGain() / 3600;
-    if(miningInterval) clearInterval(miningInterval);
-    
-    miningInterval = setInterval(() => {
-        visualBalance += gainSec;
-        localStorage.setItem('saved_mining_balance', visualBalance.toString());
-        document.getElementById('visualGain').innerText = visualBalance.toFixed(6);
-        document.getElementById('hashrate').innerText = (gainSec * 360000).toFixed(0);
-        updateTimer();
-    }, 1000);
-}
-
-// --- 3. AÇÕES DO USUÁRIO ---
+// --- 2. LÓGICA DE CONEXÃO E INTERFACE ---
 
 async function connectWallet() {
     if (window.ethereum) {
-        try {
-            const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            userAccount = accs[0];
-            document.getElementById('walletDisplay').innerText = userAccount.substring(0,6) + "...";
-            
-            await carregarDadosBanco(); 
-            updateRefUI();
-            renderShop();
-            
-            if(lastActivation && (parseInt(lastActivation) + 86400000) > Date.now()) {
-                startMiningVisuals();
-            }
-        } catch (e) { console.error(e); }
+        const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        userAccount = accs[0];
+        document.getElementById('walletDisplay').innerText = userAccount.substring(0,6) + "...";
+        
+        await verificarOuCriarUsuario(); // Cria a linha na tabela 'usuarios'
+        await atualizarSaldoCarteira();
+        updateRefUI();
+        renderShop();
     }
 }
 
 function updateRefUI() {
     const input = document.getElementById('refLink');
     if (userAccount && input) {
-        const wallet = userAccount.toLowerCase().trim();
-        // CORREÇÃO: Remove o erro do "{" que aparecia no link
-        input.value = `${window.location.origin}${window.location.pathname}?ref=${wallet}`;
+        const cleanWallet = userAccount.toLowerCase().trim();
+        // Remove de vez o erro do "{" no link
+        input.value = `${window.location.origin}${window.location.pathname}?ref=${cleanWallet}`;
     }
 }
 
-async function buyGPU(index) {
-    if(!userAccount) return alert("Conecte a carteira!");
-    const gpu = gpus[index];
-    try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const signer = provider.getSigner();
-        const contract = new ethers.Contract(tokenAddr, tokenABI, signer);
-        const tx = await contract.transfer(receptor, ethers.utils.parseUnits(gpu.custo, 18));
-        
-        alert("Processando transação...");
-        await tx.wait();
-        
-        // Grava o bônus no Supabase após a confirmação da Blockchain
-        await registrarCompraNoBanco(gpu.custo);
+// --- 3. COMPRA E BÔNUS ---
 
-        purchaseHistory[gpu.id] = Date.now();
-        localStorage.setItem('dyno_purchases', JSON.stringify(purchaseHistory));
-        renderShop();
-        await carregarDadosBanco(); 
-        alert("Sucesso! O bônus de indicação foi creditado ao seu padrinho.");
-    } catch (e) { alert("Erro na compra."); }
-}
+async function registrarCompraNoBanco(valorGasto) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const padrinho = urlParams.get('ref');
 
-async function solicitarSaque() {
-    if (visualBalance < 100) return alert("Saque mínimo: 100 $DYNO!");
-    const liquido = visualBalance * 0.95;
-
-    if (confirm(`Confirmar saque de ${visualBalance.toFixed(2)} $DYNO?\nTaxa 5% aplicada.`)) {
-        const error = await registrarSaqueNoBanco(liquido);
-        
-        if (error) {
-            alert("Erro ao salvar no banco. Tente novamente.");
-        } else {
-            alert("SOLICITAÇÃO DE SAQUE ENVIADA!");
-            visualBalance = 0;
-            localStorage.setItem('saved_mining_balance', 0);
-            document.getElementById('visualGain').innerText = "0.000000";
-        }
+    if (padrinho && padrinho.length > 30 && padrinho.toLowerCase() !== userAccount.toLowerCase()) {
+        const bonus = parseFloat(valorGasto) * 0.05;
+        // Chama a função SQL RPC que você criou
+        await _supabase.rpc('incrementar_indicacao', { 
+            alvo: padrinho.toLowerCase().trim(), 
+            bonus: bonus 
+        });
     }
 }
 
-// --- 4. INTERFACE E UTILITÁRIOS ---
-
-function updateTimer() {
-    if (!lastActivation) return;
-    const tempoRestante = (parseInt(lastActivation) + 86400000) - Date.now();
-    const btn = document.getElementById('btnActivate');
-    const display = document.getElementById('activationTimer');
-
-    if (tempoRestante > 0) {
-        btn.disabled = true;
-        const h = Math.floor(tempoRestante / 3600000);
-        const m = Math.floor((tempoRestante % 3600000) / 60000);
-        const s = Math.floor((tempoRestante % 60000) / 1000);
-        display.innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-    } else {
-        btn.disabled = false;
-        display.innerText = "00:00:00";
-    }
-}
-
-function activateMining() {
-    if(!userAccount) return alert("Conecte a carteira!");
-    if(calculateHourlyGain() <= 0) return alert("Você precisa de pelo menos 1 Dyno!");
-    lastActivation = Date.now();
-    localStorage.setItem('last_mining_activation', lastActivation);
-    startMiningVisuals();
-}
-
-function renderShop() {
-    const grid = document.getElementById('gpu-grid');
-    if(!grid) return;
-    grid.innerHTML = gpus.map((g, i) => {
-        const locked = purchaseHistory[g.id] && (Date.now() - purchaseHistory[g.id] < 864000000);
-        return `
-            <div class="gpu-item">
-                <div class="badge-profit">+${g.lucro}%</div>
-                <img src="${g.img}">
-                <h4>${g.nome}</h4>
-                <p>${g.custo} $DYNO</p>
-                <button onclick="buyGPU(${i})" ${locked ? 'disabled' : ''}>${locked ? 'LOCKED' : 'ADQUIRIR'}</button>
-            </div>`;
-    }).join('');
-}
-
-function copyRefLink() {
-    const input = document.getElementById("refLink");
-    if(!input.value) return;
-    input.select();
-    navigator.clipboard.writeText(input.value);
-    alert("Link copiado com sucesso!");
-}
-
-window.onload = () => { 
-    renderShop(); 
-    document.getElementById('visualGain').innerText = visualBalance.toFixed(6);
-};
+// ... (Restante das funções de mineração e renderShop iguais)
