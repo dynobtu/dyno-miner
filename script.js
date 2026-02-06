@@ -20,72 +20,64 @@ const gpus = [
 ];
 
 let userAccount = null;
+let miningInterval = null;
 let visualBalance = parseFloat(localStorage.getItem('saved_mining_balance')) || 0;
 let purchaseHistory = JSON.parse(localStorage.getItem('dyno_purchases')) || {};
 let lastActivation = localStorage.getItem('last_mining_activation');
 
-// --- 2. FUNÇÃO DE COMPRA (ABRE METAMASK) ---
+// --- 2. FUNÇÕES DE BLOCKCHAIN E SALDO ---
 
-async function buyGPU(index) {
-    if(!userAccount) return alert("Por favor, conecte sua carteira primeiro!");
+async function atualizarDadosInterface() {
+    if (!userAccount) return;
     
-    const gpu = gpus[index];
     try {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const signer = provider.getSigner();
-        const contract = new ethers.Contract(tokenAddr, tokenABI, signer);
+        const contract = new ethers.Contract(tokenAddr, tokenABI, provider);
         
-        // Isso fará a MetaMask abrir para confirmar o pagamento
-        const tx = await contract.transfer(receptor, ethers.utils.parseUnits(gpu.custo, 18));
-        alert("Transação enviada! Aguarde a confirmação na rede.");
+        // Atualiza Saldo em Carteira
+        const balance = await contract.balanceOf(userAccount);
+        const decimals = await contract.decimals();
+        document.getElementById('walletBalance').innerText = parseFloat(ethers.utils.formatUnits(balance, decimals)).toFixed(2);
         
-        await tx.wait(); // Espera a rede confirmar
-        
-        // Registra a compra localmente e libera a mineração
-        purchaseHistory[gpu.id] = Date.now();
-        localStorage.setItem('dyno_purchases', JSON.stringify(purchaseHistory));
-        
-        renderShop();
-        await atualizarSaldoCarteira();
-        alert("Parabéns! Dyno adquirido com sucesso.");
-    } catch (e) {
-        console.error(e);
-        alert("Erro na transação. Verifique se você tem saldo de $DYNO suficiente.");
-    }
-}
-
-// --- 3. FUNÇÕES DE SAQUE E LINK ---
-
-async function solicitarSaque() {
-    if (visualBalance < 100) return alert("O saque mínimo é de 100 $DYNO!");
-    
-    const confirmar = confirm(`Deseja sacar ${visualBalance.toFixed(2)} $DYNO?\n(Taxa de 5% será aplicada)`);
-    if (confirmar) {
-        // Envia para sua tabela de saques no Supabase
-        const { error } = await _supabase.from('saques_pendentes').insert([{ 
-            carteira_usuario: userAccount.toLowerCase(), 
-            valor_solicitado: visualBalance 
-        }]);
-        
-        if (!error) {
-            visualBalance = 0;
-            localStorage.setItem('saved_mining_balance', "0");
-            document.getElementById('visualGain').innerText = "0.000000";
-            alert("Solicitação enviada! O prazo de pagamento é de até 24h.");
+        // Gera o Link de Afiliado
+        const linkInput = document.getElementById('refLink');
+        if (linkInput) {
+            linkInput.value = `${window.location.origin}${window.location.pathname}?ref=${userAccount.toLowerCase()}`;
         }
-    }
+
+        // Mostra o Poder de Hash se tiver máquina comprada
+        const hashPower = calculateHourlyGain() * 100; // Ajuste de escala visual
+        document.getElementById('hashrate').innerText = hashPower > 0 ? `${hashPower.toFixed(0)} H/s` : "0 H/s";
+
+    } catch (e) { console.error("Erro ao atualizar dados:", e); }
 }
 
-function copyRefLink() {
-    const input = document.getElementById("refLink");
-    if (!input || !input.value) return alert("Conecte a carteira para gerar seu link!");
+// --- 3. MOTOR DE MINERAÇÃO ---
+
+function calculateHourlyGain() {
+    let total = 0;
+    Object.keys(purchaseHistory).forEach(id => {
+        const gpu = gpus.find(g => g.id == id);
+        if (gpu) total += ((parseFloat(gpu.custo) * (1 + gpu.lucro/100)) / 10) / 24;
+    });
+    return total;
+}
+
+function startMiningVisuals() {
+    if(miningInterval) clearInterval(miningInterval);
+    const gainSec = calculateHourlyGain() / 3600;
     
-    input.select();
-    navigator.clipboard.writeText(input.value);
-    alert("Link de indicação copiado!");
+    miningInterval = setInterval(() => {
+        if (gainSec > 0) {
+            visualBalance += gainSec;
+            localStorage.setItem('saved_mining_balance', visualBalance.toString());
+            document.getElementById('visualGain').innerText = visualBalance.toFixed(6);
+        }
+        updateTimer();
+    }, 1000);
 }
 
-// --- 4. FUNÇÕES DE INICIALIZAÇÃO (NECESSÁRIAS PARA OS BOTÕES FUNCIONAREM) ---
+// --- 4. AÇÕES DOS BOTÕES ---
 
 async function connectWallet() {
     if (window.ethereum) {
@@ -93,11 +85,43 @@ async function connectWallet() {
         userAccount = accs[0];
         document.getElementById('walletDisplay').innerText = userAccount.substring(0,6) + "...";
         
-        await atualizarSaldoCarteira();
-        updateRefUI();
+        await atualizarDadosInterface();
         renderShop();
+        
+        if(lastActivation && (parseInt(lastActivation) + 86400000) > Date.now()) {
+            startMiningVisuals();
+        }
     }
 }
+
+async function buyGPU(index) {
+    if(!userAccount) return alert("Conecte a carteira primeiro!");
+    const gpu = gpus[index];
+    try {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const contract = new ethers.Contract(tokenAddr, tokenABI, signer);
+        const tx = await contract.transfer(receptor, ethers.utils.parseUnits(gpu.custo, 18));
+        await tx.wait();
+        
+        purchaseHistory[gpu.id] = Date.now();
+        localStorage.setItem('dyno_purchases', JSON.stringify(purchaseHistory));
+        
+        renderShop();
+        await atualizarDadosInterface();
+        alert("Sucesso!");
+    } catch (e) { alert("Erro na compra."); }
+}
+
+function copyRefLink() {
+    const input = document.getElementById("refLink");
+    if (!input || input.value.includes("Conecte")) return alert("Conecte a carteira primeiro!");
+    input.select();
+    navigator.clipboard.writeText(input.value);
+    alert("Link copiado!");
+}
+
+// --- 5. INICIALIZAÇÃO ---
 
 function renderShop() {
     const grid = document.getElementById('gpu-grid');
@@ -115,14 +139,34 @@ function renderShop() {
     }).join('');
 }
 
-function updateRefUI() {
-    const input = document.getElementById('refLink');
-    if (userAccount && input) {
-        input.value = `${window.location.origin}${window.location.pathname}?ref=${userAccount.toLowerCase()}`;
+function updateTimer() {
+    if (!lastActivation) return;
+    const tempoRestante = (parseInt(lastActivation) + 86400000) - Date.now();
+    const display = document.getElementById('activationTimer');
+    if (tempoRestante > 0) {
+        const h = Math.floor(tempoRestante / 3600000);
+        const m = Math.floor((tempoRestante % 3600000) / 60000);
+        const s = Math.floor((tempoRestante % 60000) / 1000);
+        if(display) display.innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+    } else {
+        if(display) display.innerText = "00:00:00";
     }
 }
 
-// Inicializa a loja ao carregar
-window.onload = () => { 
+window.onload = async () => {
     renderShop();
+    document.getElementById('visualGain').innerText = visualBalance.toFixed(6);
+    
+    // Tenta auto-conectar se já foi autorizado antes
+    if (window.ethereum) {
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        if (accounts.length > 0) {
+            userAccount = accounts[0];
+            document.getElementById('walletDisplay').innerText = userAccount.substring(0,6) + "...";
+            await atualizarDadosInterface();
+            if(lastActivation && (parseInt(lastActivation) + 86400000) > Date.now()) {
+                startMiningVisuals();
+            }
+        }
+    }
 };
