@@ -1,6 +1,6 @@
 // --- CONFIGURAÇÃO SUPABASE ---
 const SUPABASE_URL = 'https://tdzwbddisdrikzztqoze.supabase.co'; 
-const SUPABASE_KEY = 'sb_publishable_BcNbL1tcyFRTpBRqAxgaEw_4Wq7o-tY'; // Sua chave do print
+const SUPABASE_KEY = 'sb_publishable_BcNbL1tcyFRTpBRqAxgaEw_4Wq7o-tY'; // Chave verificada
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // --- CONFIGURAÇÕES DO CONTRATO ---
@@ -20,80 +20,100 @@ const gpus = [
     { id: 5, nome: "Super Lendário", custo: "1600", lucro: 25, img: "SUPER LENDÁRIO.png" }
 ];
 
+// --- VARIÁVEIS DE ESTADO ---
 let userAccount = null;
 let visualBalance = parseFloat(localStorage.getItem('saved_mining_balance')) || 0;
 let purchaseHistory = JSON.parse(localStorage.getItem('dyno_purchases')) || {};
 let lastActivation = localStorage.getItem('last_mining_activation');
 
-// --- 1. FUNÇÃO PARA BUSCAR SALDO REAL NA CARTEIRA ---
-async function atualizarSaldoCarteira() {
-    if (!userAccount || !window.ethereum) return;
-    try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const contract = new ethers.Contract(tokenAddr, tokenABI, provider);
-        const balance = await contract.balanceOf(userAccount);
-        const decimals = await contract.decimals();
-        // Formata o saldo para exibir no painel
-        document.getElementById('walletBalance').innerText = parseFloat(ethers.utils.formatUnits(balance, decimals)).toFixed(2);
-    } catch (e) {
-        console.error("Erro ao buscar saldo:", e);
-    }
-}
+// --- 1. FUNÇÕES DE BANCO DE DADOS ---
 
-// --- 2. FUNÇÕES DO BANCO DE DADOS (SUPABASE) ---
-async function carregarDadosBanco() {
+async function verificarOuCriarUsuario() {
     if (!userAccount) return;
     const wallet = userAccount.toLowerCase().trim();
-    // Busca na tabela 'usuarios' que você criou
-    const { data } = await _supabase
-        .from('usuarios')
-        .select('ref_count, ref_earnings')
-        .eq('carteira', wallet)
-        .single();
+    
+    // Força a entrada da carteira na tabela 'usuarios'
+    try {
+        await _supabase.from('usuarios').upsert({ carteira: wallet }, { onConflict: 'carteira' });
+        await carregarDadosBanco();
+    } catch (e) { console.error("Erro banco:", e); }
+}
 
+async function carregarDadosBanco() {
+    const wallet = userAccount.toLowerCase().trim();
+    const { data } = await _supabase.from('usuarios').select('ref_count, ref_earnings').eq('carteira', wallet).single();
     if (data) {
         document.getElementById('refCount').innerText = data.ref_count || 0;
         document.getElementById('refEarnings').innerText = (data.ref_earnings || 0).toFixed(2);
     }
 }
 
-async function registrarCompraNoBanco(valorGasto) {
-    const urlParams = new URLSearchParams(window.location.search);
-    const padrinho = urlParams.get('ref');
+// --- 2. CONEXÃO E INTERFACE ---
 
-    if (padrinho && padrinho.length > 30 && padrinho.toLowerCase() !== userAccount.toLowerCase()) {
-        const bonus = parseFloat(valorGasto) * 0.05;
-        // Ativa sua função SQL de bônus
-        await _supabase.rpc('incrementar_indicacao', { 
-            alvo: padrinho.toLowerCase().trim(), 
-            bonus: bonus 
-        });
-    }
-}
-
-// --- 3. LÓGICA DE INTERFACE ---
 async function connectWallet() {
     if (window.ethereum) {
-        const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        userAccount = accs[0];
-        document.getElementById('walletDisplay').innerText = userAccount.substring(0,6) + "...";
-        
-        await carregarDadosBanco();
-        await atualizarSaldoCarteira(); // Mostra o saldo de $DYNO
-        updateRefUI();
-        renderShop();
-        if(lastActivation && (parseInt(lastActivation) + 86400000) > Date.now()) startMiningVisuals();
+        try {
+            const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            userAccount = accs[0];
+            document.getElementById('walletDisplay').innerText = userAccount.substring(0,6) + "...";
+            
+            await verificarOuCriarUsuario();
+            updateRefUI();
+            renderShop();
+            // Inicia mineração se houver ativação recente
+            if(lastActivation && (parseInt(lastActivation) + 86400000) > Date.now()) {
+                startMiningVisuals();
+            }
+        } catch (e) { console.error(e); }
     }
 }
 
 function updateRefUI() {
     const input = document.getElementById('refLink');
     if (userAccount && input) {
-        // CORREÇÃO DEFINITIVA DO LINK
-        const cleanWallet = userAccount.toLowerCase().trim();
-        input.value = window.location.origin + window.location.pathname + "?ref=" + cleanWallet;
+        const wallet = userAccount.toLowerCase().trim();
+        // Limpa o erro do link que aparecia com "{"
+        input.value = `${window.location.origin}${window.location.pathname}?ref=${wallet}`;
     }
 }
 
-// ... (Mantenha as funções buyGPU, solicitarSaque e as de mineração iguais)
-// Adicione apenas a chamada de saldo dentro de buyGPU após o tx.wait()
+function renderShop() {
+    const grid = document.getElementById('gpu-grid');
+    if(!grid) return;
+    grid.innerHTML = gpus.map((g, i) => {
+        const locked = purchaseHistory[g.id] && (Date.now() - purchaseHistory[g.id] < 864000000);
+        return `
+            <div class="gpu-item">
+                <div class="badge-profit">+${g.lucro}%</div>
+                <img src="${g.img}">
+                <h4>${g.nome}</h4>
+                <p>${g.custo} $DYNO</p>
+                <button onclick="buyGPU(${i})" ${locked ? 'disabled' : ''}>${locked ? 'LOCKED' : 'ADQUIRIR'}</button>
+            </div>`;
+    }).join('');
+}
+
+// --- 3. LOGICA DE MINERAÇÃO (Para as máquinas aparecerem) ---
+
+function calculateHourlyGain() {
+    let total = 0;
+    Object.keys(purchaseHistory).forEach(id => {
+        const gpu = gpus.find(g => g.id == id);
+        if (gpu) total += ((parseFloat(gpu.custo) * (1 + gpu.lucro/100)) / 10) / 24;
+    });
+    return total;
+}
+
+function startMiningVisuals() {
+    const gainSec = calculateHourlyGain() / 3600;
+    setInterval(() => {
+        visualBalance += gainSec;
+        document.getElementById('visualGain').innerText = visualBalance.toFixed(6);
+    }, 1000);
+}
+
+// Inicializa a loja ao abrir o site
+window.onload = () => { 
+    renderShop(); 
+    document.getElementById('visualGain').innerText = visualBalance.toFixed(6);
+};
