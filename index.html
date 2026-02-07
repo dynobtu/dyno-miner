@@ -15,18 +15,35 @@
 </head>
 
 <body>
-  <header class="topbar">
-    <div class="logo">DYNO-CRYPTO V2.0 PRO</div>
+
+  <!-- HEADER MATRIX -->
+  <header class="topbar matrix-header">
+
+    <div class="logo-area">
+      <img src="dyno.png" class="dyno-icon" alt="Dyno" />
+      <div class="logo">DYNO-CRYPTO V2.0 PRO</div>
+    </div>
 
     <div class="wallet-area">
       <button class="btn" onclick="connectWallet()">CONECTAR</button>
+
       <div class="wallet-box">
         <span id="walletDisplay">---</span>
       </div>
+
+      <a class="btn btn-obter"
+        href="https://pancakeswap.finance/swap?chain=bsc&inputCurrency=0x55d398326f99059fF775485246999027B3197955&outputCurrency=0xDa9756415A5D92027d994Fd33aC1823bA2fdc9ED"
+        target="_blank">
+        OBTER DYNO
+      </a>
     </div>
+
   </header>
 
+
+  <!-- INFO TOP -->
   <section class="info-row">
+
     <div class="info-card">
       <h4>SALDO MINERADO</h4>
       <p><span id="visualGain">0.000000</span> $DYNO</p>
@@ -35,7 +52,7 @@
     <div class="info-card">
       <h4>LUCRO INDICAÇÃO (5%)</h4>
       <p><span id="refEarnings">0.00</span> $DYNO</p>
-      <p style="opacity:0.7; font-size:0.85rem;">INDICADOS: <span id="refCount">0</span></p>
+      <p class="small-text">INDICADOS: <span id="refCount">0</span></p>
     </div>
 
     <div class="info-card">
@@ -47,14 +64,19 @@
       <h4>SALDO EM CARTEIRA</h4>
       <p><span id="walletBalance">0.00</span> $DYNO</p>
     </div>
+
   </section>
 
+
+  <!-- GRID PRINCIPAL -->
   <main class="main-grid">
+
+    <!-- TERMINAL -->
     <aside class="panel">
       <h3>TERMINAL DE OPERAÇÃO</h3>
 
       <button id="btnActivate" class="btn-green" onclick="activateMining()">
-        ATIVAR MINERAÇÃO (24H)
+        ⚡ ATIVAR MINERAÇÃO (24H)
       </button>
 
       <p class="timer">
@@ -62,31 +84,38 @@
       </p>
 
       <button class="btn-green" onclick="solicitarSaque()">
-        SOLICITAR SAQUE
+        🏧 SOLICITAR SAQUE
       </button>
-
-      <a id="btnObterDyno" class="btn-green btn-link" target="_blank">
-        OBTER $DYNO
-      </a>
     </aside>
 
+
+    <!-- SHOP -->
     <section class="shop">
       <h2>MERCADO DE HARDWARE</h2>
       <div id="gpu-grid" class="gpu-grid"></div>
     </section>
 
+
+    <!-- AFILIADOS -->
     <aside class="panel">
       <h3>SISTEMA DE AFILIADOS</h3>
 
       <p>SEU LINK DE INDICAÇÃO:</p>
       <input id="refLink" class="ref-input" value="Conecte a carteira..." readonly />
-      <button class="btn-green" onclick="copyRefLink()">COPIAR LINK</button>
+
+      <button class="btn-green" onclick="copyRefLink()">
+        COPIAR LINK
+      </button>
     </aside>
+
   </main>
 
+
+  <!-- RODAPÉ (VOLTOU IGUAL O ANTIGO) -->
   <footer class="footer">
+
     <div class="footer-box">
-      <h4>📜 REGRAS DE OPERAÇÃO</h4>
+      <h4>📌 REGRAS DE OPERAÇÃO</h4>
       <p>Ciclo de vida do hardware: 10 dias.</p>
       <p>Limite: 1 unidade por modelo a cada ciclo.</p>
       <p>Ganhos vinculados à ativação manual diária (24h).</p>
@@ -104,13 +133,16 @@
       <p>Taxa de rede: 5% por transação de saque.</p>
     </div>
 
-    <div class="footer-box footer-alert">
+    <div class="footer-box warning">
       <h4>⚠️ AVISO LEGAL</h4>
       <p>O mercado de criptoativos é volátil.</p>
-      <p>Não garantimos lucros fixos. Opere com responsabilidade.</p>
+      <p>Não garantimos lucros fixos.</p>
+      <p>Opere com responsabilidade.</p>
       <p><b>RESTRITO PARA MAIORES DE 18 ANOS.</b></p>
     </div>
+
   </footer>
+
 
   <script src="script.js"></script>
 </body>
