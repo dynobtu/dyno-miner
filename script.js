@@ -6,7 +6,7 @@ const SUPABASE_KEY = 'sb_publishable_BcNbL1tcyFRTpBRqAxgaEw_4Wq7o-tY';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const receptor = "0xe097661503B830ae10e91b01885a4b767A0e9107";
-const tokenAddr = "0xDa9756415A5D92027d994Fd33ac1823bA2fdc9ED";
+const tokenAddr = "0xDa9756415A5D92027d994Fd33aC1823bA2fdc9ED";
 
 const tokenABI = [
     "function transfer(address to, uint256 amount) public returns (bool)",
@@ -300,3 +300,4 @@ window.onload = () => {
         iniciarMineracao();
     }
 };
+
