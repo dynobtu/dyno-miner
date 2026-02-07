@@ -103,10 +103,10 @@ body {
   font-size: 0.85rem;
 }
 
-/* GRID PRINCIPAL */
+/* GRID PRINCIPAL - AGORA 2 COLUNAS */
 .main-grid {
   display: grid;
-  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-columns: 1fr 2fr;
   gap: 15px;
   padding: 15px;
 }
@@ -204,21 +204,30 @@ body {
   margin-top: 10px;
 }
 
-/* TEXTO INFO */
-.info-text {
-  font-size: 0.9rem;
-  opacity: 0.85;
-  line-height: 1.4;
-  margin-top: 10px;
+/* =============================== */
+/* FOOTER */
+/* =============================== */
+.footer {
+  margin-top: 20px;
+  padding: 15px;
+}
+
+.footer-box {
+  border: 1px solid #00ff66;
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.45);
+  box-shadow: 0 0 15px rgba(0, 255, 102, 0.12);
+  text-align: center;
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
 .footer-warning {
-  margin-top: 20px;
+  margin-top: 15px;
   padding-top: 10px;
   border-top: 1px solid rgba(0, 255, 102, 0.4);
   font-size: 0.85rem;
   opacity: 0.8;
-  text-align: center;
 }
 
 /* =============================== */
