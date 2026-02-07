@@ -1,168 +1,85 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dyno-Crypto V2.0 PRO</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DYNO-CRYPTO V2.0 PRO</title>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- ethers -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+
+  <!-- supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
-    <header>
-        <canvas id="matrixCanvas"></canvas>
+  <header class="topbar">
+    <div class="logo">DYNO-CRYPTO V2.0 PRO</div>
 
-        <div class="header-content">
-            <div class="logo">🦖 DYNO-CRYPTO V2.0 PRO</div>
+    <div class="wallet-area">
+      <button class="btn" onclick="connectWallet()">CONECTAR</button>
+      <div class="wallet-box">
+        <span id="walletDisplay">---</span>
+      </div>
+    </div>
+  </header>
 
-            <div class="header-btns">
-                <button class="btn-secondary"
-                    onclick="window.open('https://pancakeswap.finance/swap?chain=bsc&inputCurrency=0x55d398326f99059fF775485246999027B3197955&outputCurrency=0xDa9756415A5D92027d994Fd33aC1823bA2fdc9ED', '_blank')">
-                    OBTER $DYNO
-                </button>
+  <section class="info-row">
+    <div class="info-card">
+      <h4>SALDO MINERADO</h4>
+      <p><span id="visualGain">0.000000</span> $DYNO</p>
+    </div>
 
-                <button id="btnConnect" class="btn-connect" onclick="connectWallet()">
-                    <span id="walletDisplay">CONECTAR CARTEIRA</span>
-                </button>
-            </div>
-        </div>
-    </header>
+    <div class="info-card">
+      <h4>LUCRO INDICAÇÃO (5%)</h4>
+      <p><span id="refEarnings">0.00</span> $DYNO</p>
+      <p style="opacity:0.7; font-size:0.85rem;">INDICADOS: <span id="refCount">0</span></p>
+    </div>
 
-    <main class="container">
-        <section class="stats-grid">
-            <div class="stat-card">
-                <p>SALDO MINERADO</p>
-                <h3><span id="visualGain">0.000000</span> $DYNO</h3>
-            </div>
+    <div class="info-card">
+      <h4>PODER DE HASH</h4>
+      <p><span id="hashrate">0</span> H/s</p>
+    </div>
 
-            <div class="stat-card">
-                <p>LUCRO INDICAÇÃO (5%)</p>
-                <h3><span id="refEarnings">0.00</span> $DYNO</h3>
-                <small>INDICADOS: <span id="refCount">0</span></small>
-            </div>
+    <div class="info-card">
+      <h4>SALDO EM CARTEIRA</h4>
+      <p><span id="walletBalance">0.00</span> $DYNO</p>
+    </div>
+  </section>
 
-            <div class="stat-card">
-                <p>PODER DE HASH</p>
-                <h3><span id="hashrate">0</span> H/s</h3>
-            </div>
+  <main class="main-grid">
+    <aside class="panel">
+      <h3>TERMINAL DE OPERAÇÃO</h3>
 
-            <div class="stat-card">
-                <p>SALDO EM CARTEIRA</p>
-                <h3><span id="walletBalance">0.00</span> $DYNO</h3>
-            </div>
-        </section>
+      <button id="btnActivate" class="btn-green" onclick="activateMining()">
+        ATIVAR MINERAÇÃO (24H)
+      </button>
 
-        <div class="main-grid">
-            <aside class="controls">
-                <div class="panel">
-                    <h4>TERMINAL DE OPERAÇÃO</h4>
+      <p class="timer">
+        REATIVAR EM: <span id="activationTimer">00:00:00</span>
+      </p>
 
-                    <button id="btnActivate" class="btn-mine" onclick="activateMining()">
-                        ⚡ ATIVAR MINERAÇÃO (24H)
-                    </button>
+      <button class="btn-green" onclick="solicitarSaque()">
+        SOLICITAR SAQUE
+      </button>
+    </aside>
 
-                    <p class="timer">
-                        REATIVAR EM: <span id="activationTimer">00:00:00</span>
-                    </p>
+    <section class="shop">
+      <h2>MERCADO DE HARDWARE</h2>
+      <div id="gpu-grid" class="gpu-grid"></div>
+    </section>
 
-                    <button class="btn-withdraw" onclick="solicitarSaque()">
-                        🏧 SOLICITAR SAQUE
-                    </button>
-                </div>
+    <aside class="panel">
+      <h3>SISTEMA DE AFILIADOS</h3>
 
-                <div class="panel">
-                    <h4>SISTEMA DE AFILIADOS</h4>
-                    <p style="font-size: 0.7rem; margin-bottom: 5px; color: #00ff41;">
-                        SEU LINK DE INDICAÇÃO:
-                    </p>
+      <p>SEU LINK DE INDICAÇÃO:</p>
+      <input id="refLink" class="ref-input" value="Conecte a carteira..." readonly />
+      <button class="btn-green" onclick="copyRefLink()">COPIAR LINK</button>
+    </aside>
+  </main>
 
-                    <input type="text" id="refLink" readonly placeholder="Conecte sua carteira...">
-
-                    <button onclick="copyRefLink()" class="btn-secondary" style="width:100%; margin-top:10px;">
-                        COPIAR LINK
-                    </button>
-                </div>
-            </aside>
-
-            <section class="shop">
-                <h2 class="section-title">MERCADO DE HARDWARE</h2>
-                <div id="gpu-grid" class="gpu-grid"></div>
-            </section>
-        </div>
-    </main>
-
-    <footer class="footer-pro">
-        <div class="footer-grid">
-            <div class="footer-column">
-                <h4>📋 REGRAS DE OPERAÇÃO</h4>
-                <ul>
-                    <li>Ciclo de vida do hardware: 10 dias.</li>
-                    <li>Limite: 1 unidade por modelo a cada ciclo.</li>
-                    <li>Ganhos vinculados à ativação manual diária (24h).</li>
-                </ul>
-            </div>
-
-            <div class="footer-column">
-                <h4>👥 SISTEMA DE AFILIADOS</h4>
-                <ul>
-                    <li>Bônus de 5% sobre compras de indicados.</li>
-                    <li>Indicação válida após a 1ª compra do indicado.</li>
-                </ul>
-            </div>
-
-            <div class="footer-column">
-                <h4>🏧 SAQUES E TAXAS</h4>
-                <ul>
-                    <li>Saque mínimo obrigatório: 100 $DYNO.</li>
-                    <li>Taxa de rede: 5% por transação de saque.</li>
-                </ul>
-            </div>
-
-            <div class="footer-column disclaimer">
-                <h4>⚠️ AVISO LEGAL</h4>
-                <p>O mercado de criptoativos é volátil. Não garantimos lucros fixos. Opere com responsabilidade.</p>
-                <p><strong>RESTRITO PARA MAIORES DE 18 ANOS.</strong></p>
-            </div>
-        </div>
-
-        <div class="footer-copyright">
-            <p>© 2026 DYNO-CRYPTO V2.0 PRO. Todos os direitos reservados.</p>
-            <p style="font-size: 0.6rem; opacity: 0.5; margin-top: 5px;">
-                O uso não autorizado desta interface ou códigos resultará em medidas legais.
-            </p>
-        </div>
-    </footer>
-
-    <script>
-        const c = document.getElementById('matrixCanvas');
-        const ctx = c.getContext('2d');
-        c.width = window.innerWidth;
-        c.height = 160;
-
-        const drops = Array(Math.floor(c.width / 14)).fill(1);
-
-        setInterval(() => {
-            ctx.fillStyle = "rgba(0,0,0,0.05)";
-            ctx.fillRect(0, 0, c.width, c.height);
-
-            ctx.fillStyle = "#00ff41";
-            ctx.font = "14px monospace";
-
-            drops.forEach((y, i) => {
-                ctx.fillText("01"[Math.floor(Math.random() * 2)], i * 14, y * 14);
-                if (y * 14 > c.height && Math.random() > 0.975) drops[i] = 0;
-                drops[i]++;
-            });
-        }, 50);
-
-        window.addEventListener("resize", () => {
-            c.width = window.innerWidth;
-            c.height = 160;
-        });
-    </script>
-
-    <script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
