@@ -16,26 +16,26 @@
 
 <body>
 
-  <!-- HEADER MATRIX -->
+  <!-- HEADER COM MATRIX -->
   <header class="topbar matrix-header">
 
     <div class="logo-area">
-      <img src="dyno.png" class="dyno-icon" alt="Dyno" />
+      <span class="dyno-logo">🦖</span>
       <div class="logo">DYNO-CRYPTO V2.0 PRO</div>
     </div>
 
     <div class="wallet-area">
-      <button class="btn" onclick="connectWallet()">CONECTAR</button>
-
-      <div class="wallet-box">
-        <span id="walletDisplay">---</span>
-      </div>
-
       <a class="btn btn-obter"
         href="https://pancakeswap.finance/swap?chain=bsc&inputCurrency=0x55d398326f99059fF775485246999027B3197955&outputCurrency=0xDa9756415A5D92027d994Fd33aC1823bA2fdc9ED"
         target="_blank">
         OBTER DYNO
       </a>
+
+      <button class="btn" onclick="connectWallet()">CONECTAR</button>
+
+      <div class="wallet-box">
+        <span id="walletDisplay">---</span>
+      </div>
     </div>
 
   </header>
@@ -43,7 +43,6 @@
 
   <!-- INFO TOP -->
   <section class="info-row">
-
     <div class="info-card">
       <h4>SALDO MINERADO</h4>
       <p><span id="visualGain">0.000000</span> $DYNO</p>
@@ -64,7 +63,6 @@
       <h4>SALDO EM CARTEIRA</h4>
       <p><span id="walletBalance">0.00</span> $DYNO</p>
     </div>
-
   </section>
 
 
@@ -86,6 +84,13 @@
       <button class="btn-green" onclick="solicitarSaque()">
         🏧 SOLICITAR SAQUE
       </button>
+
+      <a class="btn-green btn-obter-side"
+        href="https://pancakeswap.finance/swap?chain=bsc&inputCurrency=0x55d398326f99059fF775485246999027B3197955&outputCurrency=0xDa9756415A5D92027d994Fd33aC1823bA2fdc9ED"
+        target="_blank">
+        💰 OBTER DYNO
+      </a>
+
     </aside>
 
 
@@ -111,7 +116,7 @@
   </main>
 
 
-  <!-- RODAPÉ (VOLTOU IGUAL O ANTIGO) -->
+  <!-- FOOTER COM AVISOS -->
   <footer class="footer">
 
     <div class="footer-box">
