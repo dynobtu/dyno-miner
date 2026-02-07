@@ -1,38 +1,278 @@
-body { margin: 0; font-family: 'Courier New', monospace; background: black; color: #00ff66; line-height: 1.6; }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: black;
+  color: #00ff66;
+}
 
-/* HEADER MATRIX (SÓ NO TOPO) */
-.topbar { display: flex; justify-content: space-between; padding: 20px; border-bottom: 2px solid #00ff66; align-items: center; background: rgba(0,20,0,0.5); }
-.matrix-header::before { content: ""; position: absolute; inset: 0; background-image: repeating-linear-gradient(to bottom, rgba(0, 255, 102, 0.1) 0px, transparent 2px, transparent 8px); animation: matrixMove 5s linear infinite; opacity: 0.3; pointer-events: none; }
-@keyframes matrixMove { from { transform: translateY(-50px); } to { transform: translateY(50px); } }
+/* HEADER */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px;
+  border-bottom: 2px solid #00ff66;
+  align-items: center;
+}
 
-/* CARDS DE SALDO */
-.info-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; padding: 20px; }
-.info-card { border: 1px solid #00ff66; padding: 15px; text-align: center; background: rgba(0, 40, 0, 0.2); box-shadow: 0 0 10px rgba(0, 255, 102, 0.1); }
-.info-card h4 { margin: 0; font-size: 0.8rem; opacity: 0.8; }
-.info-card p { font-size: 1.3rem; font-weight: bold; margin: 10px 0 0 0; }
+.logo-area {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 
-/* LAYOUT PRINCIPAL (2 COLUNAS) */
-.main-layout { display: grid; grid-template-columns: 300px 1fr; gap: 20px; padding: 20px; align-items: start; }
+.logo {
+  font-weight: bold;
+  font-size: 1.2rem;
+}
 
-/* PAINEL LATERAL */
-.side-panel { border: 1px solid #00ff66; padding: 20px; background: rgba(0, 30, 0, 0.3); }
-.side-panel h3 { border-bottom: 1px solid #00ff66; padding-bottom: 10px; margin-top: 0; }
+.sublogo {
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
 
-/* ÁREA DA LOJA */
-.shop-area { border: 1px solid #00ff66; padding: 20px; background: rgba(0, 15, 0, 0.4); }
-.gpu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
-.gpu-item { border: 1px solid #00ff66; padding: 15px; text-align: center; background: black; transition: 0.3s; }
-.gpu-item:hover { box-shadow: 0 0 20px rgba(0, 255, 102, 0.3); }
+.wallet-area {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
 
-/* RODAPÉ DE INFORMAÇÕES (OCUPANDO LARGURA TOTAL) */
-.bottom-info { margin: 20px; padding: 25px; border: 1px solid #00ff66; background: rgba(0, 20, 0, 0.6); }
-.bottom-info h3 { color: #00ff66; margin-top: 0; font-size: 1.1rem; }
-.info-text-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; border-bottom: 1px solid rgba(0,255,102,0.3); padding-bottom: 15px; }
-.footer-warning { margin-top: 15px; font-size: 0.8rem; opacity: 0.6; text-align: center; }
+.wallet-box {
+  border: 1px solid #00ff66;
+  padding: 8px 12px;
+  min-width: 120px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.6);
+}
 
 /* BOTÕES */
-.btn-green { width: 100%; padding: 12px; margin-top: 10px; border: 1px solid #00ff66; background: transparent; color: #00ff66; cursor: pointer; font-weight: bold; }
-.btn-green:hover { background: #00ff66; color: black; }
-.ref-input { width: 100%; padding: 10px; background: #001100; border: 1px solid #00ff66; color: #00ff66; margin-top: 10px; box-sizing: border-box; }
+.btn {
+  padding: 8px 12px;
+  border: 1px solid #00ff66;
+  background: transparent;
+  color: #00ff66;
+  cursor: pointer;
+  text-decoration: none;
+  transition: 0.2s;
+}
 
-@media (max-width: 900px) { .main-layout { grid-template-columns: 1fr; } }
+.btn:hover {
+  background: #00ff66;
+  color: black;
+}
+
+.btn-obter {
+  font-weight: bold;
+}
+
+.btn-green {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border: 1px solid #00ff66;
+  background: transparent;
+  color: #00ff66;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-green:hover {
+  background: #00ff66;
+  color: black;
+}
+
+/* INFO CARDS */
+.info-row {
+  display: flex;
+  gap: 10px;
+  padding: 15px;
+  flex-wrap: wrap;
+}
+
+.info-card {
+  flex: 1;
+  min-width: 180px;
+  border: 1px solid #00ff66;
+  padding: 10px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 10px rgba(0, 255, 102, 0.15);
+}
+
+.small-info {
+  opacity: 0.7;
+  font-size: 0.85rem;
+}
+
+/* GRID PRINCIPAL */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 15px;
+  padding: 15px;
+}
+
+/* PAINÉIS */
+.panel {
+  border: 1px solid #00ff66;
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.45);
+  box-shadow: 0 0 15px rgba(0, 255, 102, 0.12);
+}
+
+.timer {
+  margin-top: 10px;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+/* SHOP */
+.shop {
+  border: 1px solid #00ff66;
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.45);
+  box-shadow: 0 0 15px rgba(0, 255, 102, 0.12);
+}
+
+.gpu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.gpu-item {
+  border: 1px solid #00ff66;
+  padding: 10px;
+  text-align: center;
+  position: relative;
+  background: rgba(0, 0, 0, 0.55);
+  box-shadow: 0 0 10px rgba(0, 255, 102, 0.08);
+  transition: 0.2s;
+}
+
+.gpu-item:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 15px rgba(0, 255, 102, 0.25);
+}
+
+.gpu-item img {
+  width: 100%;
+  max-width: 150px;
+  margin: 0 auto;
+  display: block;
+}
+
+.gpu-item button {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #00ff66;
+  background: transparent;
+  color: #00ff66;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: 0.2s;
+}
+
+.gpu-item button:hover {
+  background: #00ff66;
+  color: black;
+}
+
+.gpu-item button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* BADGE LUCRO */
+.badge-profit {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: 1px solid #00ff66;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+/* INPUT LINK */
+.ref-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #00ff66;
+  background: black;
+  color: #00ff66;
+  margin-top: 10px;
+}
+
+/* TEXTO INFO */
+.info-text {
+  font-size: 0.9rem;
+  opacity: 0.85;
+  line-height: 1.4;
+  margin-top: 10px;
+}
+
+.footer-warning {
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(0, 255, 102, 0.4);
+  font-size: 0.85rem;
+  opacity: 0.8;
+  text-align: center;
+}
+
+/* =============================== */
+/* EFEITO MATRIX (SEM IMAGEM) */
+/* =============================== */
+.matrix-header {
+  position: relative;
+  overflow: hidden;
+  background: black;
+}
+
+.matrix-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 255, 102, 0.25) 0px,
+    rgba(0, 255, 102, 0.25) 2px,
+    transparent 2px,
+    transparent 10px
+  );
+  animation: matrixMove 3s linear infinite;
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+@keyframes matrixMove {
+  from {
+    transform: translateY(-60px);
+  }
+  to {
+    transform: translateY(60px);
+  }
+}
+
+/* GARANTE QUE O TEXTO FIQUE EM CIMA */
+.topbar * {
+  position: relative;
+  z-index: 2;
+}
+
+/* RESPONSIVO */
+@media (max-width: 1000px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .gpu-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wallet-area {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}
