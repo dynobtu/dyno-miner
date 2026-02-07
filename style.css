@@ -10,6 +10,8 @@ body {
   justify-content: space-between;
   padding: 15px;
   border-bottom: 2px solid #00ff66;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .logo {
@@ -51,6 +53,8 @@ body {
   background: transparent;
   color: #00ff66;
   cursor: pointer;
+  font-weight: bold;
+  text-align: center;
 }
 
 .btn-green:hover {
@@ -58,14 +62,21 @@ body {
   color: black;
 }
 
+.btn-link {
+  display: block;
+  text-decoration: none;
+}
+
 .info-row {
   display: flex;
   gap: 10px;
   padding: 15px;
+  flex-wrap: wrap;
 }
 
 .info-card {
   flex: 1;
+  min-width: 180px;
   border: 1px solid #00ff66;
   padding: 10px;
   text-align: center;
@@ -110,7 +121,7 @@ body {
 
 .gpu-item img {
   width: 100%;
-  max-width: 150px;
+  max-width: 160px;
   margin: 0 auto;
   display: block;
 }
@@ -142,6 +153,7 @@ body {
   border: 1px solid #00ff66;
   padding: 2px 6px;
   font-size: 0.75rem;
+  background: black;
 }
 
 .ref-input {
@@ -151,4 +163,45 @@ body {
   background: black;
   color: #00ff66;
   margin-top: 10px;
+}
+
+.footer {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  padding: 15px;
+  border-top: 2px solid #00ff66;
+  margin-top: 20px;
+}
+
+.footer-box {
+  border: 1px solid #00ff66;
+  padding: 10px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.footer-alert {
+  border: 2px solid red;
+  color: #00ff66;
+}
+
+.footer-box h4 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 1000px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .gpu-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .footer {
+    grid-template-columns: 1fr;
+  }
 }
