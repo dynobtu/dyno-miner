@@ -4,59 +4,117 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DYNO-CRYPTO V2.0 PRO</title>
+
   <link rel="stylesheet" href="style.css" />
+
+  <!-- ethers -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+
+  <!-- supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body>
 
+  <!-- HEADER COM EFEITO MATRIX -->
   <header class="topbar matrix-header">
     <div class="logo-area">
       <div class="logo">DYNO-CRYPTO V2.0 PRO</div>
       <div class="sublogo">MINERAÇÃO ONLINE / OFFLINE (24H)</div>
     </div>
+
     <div class="wallet-area">
-      <a class="btn btn-obter" target="_blank" href="https://pancakeswap.finance/swap?chain=bsc&outputCurrency=0xDa9756415A5D92027d994Fd33ac1823bA2fdc9ED">OBTER DYNO</a>
+      <!-- BOTÃO OBTER DYNO (SÓ AQUI EM CIMA) -->
+      <a class="btn btn-obter" target="_blank"
+        href="https://pancakeswap.finance/swap?chain=bsc&inputCurrency=0x55d398326f99059fF775485246999027B3197955&outputCurrency=0xDa9756415A5D92027d994Fd33aC1823bA2fdc9ED">
+        OBTER DYNO
+      </a>
+
       <button class="btn" onclick="connectWallet()">CONECTAR</button>
-      <div class="wallet-box"><span id="walletDisplay">---</span></div>
+
+      <div class="wallet-box">
+        <span id="walletDisplay">---</span>
+      </div>
     </div>
   </header>
 
+  <!-- INFO CARDS -->
   <section class="info-row">
-    <div class="info-card"><h4>SALDO MINERADO</h4><p><span id="visualGain">0.000000</span> $DYNO</p></div>
-    <div class="info-card"><h4>LUCRO INDICAÇÃO (5%)</h4><p><span id="refEarnings">0.00</span> $DYNO</p></div>
-    <div class="info-card"><h4>PODER DE HASH</h4><p><span id="hashrate">0</span> H/s</p></div>
-    <div class="info-card"><h4>SALDO EM CARTEIRA</h4><p><span id="walletBalance">0.00</span> $DYNO</p></div>
+    <div class="info-card">
+      <h4>SALDO MINERADO</h4>
+      <p><span id="visualGain">0.000000</span> $DYNO</p>
+    </div>
+
+    <div class="info-card">
+      <h4>LUCRO INDICAÇÃO (5%)</h4>
+      <p><span id="refEarnings">0.00</span> $DYNO</p>
+      <p class="small-info">INDICADOS: <span id="refCount">0</span></p>
+    </div>
+
+    <div class="info-card">
+      <h4>PODER DE HASH</h4>
+      <p><span id="hashrate">0</span> H/s</p>
+    </div>
+
+    <div class="info-card">
+      <h4>SALDO EM CARTEIRA</h4>
+      <p><span id="walletBalance">0.00</span> $DYNO</p>
+    </div>
   </section>
 
-  <main class="main-layout">
-    <aside class="side-panel">
+  <!-- GRID PRINCIPAL -->
+  <main class="main-grid">
+
+    <!-- PAINEL ESQUERDO -->
+    <aside class="panel">
       <h3>TERMINAL DE OPERAÇÃO</h3>
-      <button id="btnActivate" class="btn-green" onclick="activateMining()">⚡ ATIVAR MINERAÇÃO (24H)</button>
-      <p class="timer">REATIVAR EM: <span id="activationTimer">00:00:00</span></p>
-      <button class="btn-green" onclick="solicitarSaque()">🏧 SOLICITAR SAQUE</button>
-      <button class="btn-green" onclick="copyRefLink()">👥 COPIAR LINK DE INDICAÇÃO</button>
+
+      <button id="btnActivate" class="btn-green" onclick="activateMining()">
+        ⚡ ATIVAR MINERAÇÃO (24H)
+      </button>
+
+      <p class="timer">
+        REATIVAR EM: <span id="activationTimer">00:00:00</span>
+      </p>
+
+      <button class="btn-green" onclick="solicitarSaque()">
+        🏧 SOLICITAR SAQUE
+      </button>
+
+      <!-- BOTÃO DE INDICAÇÃO -->
+      <button class="btn-green" onclick="copyRefLink()">
+        👥 COPIAR LINK DE INDICAÇÃO
+      </button>
+
+      <!-- INPUT LINK EMBAIXO DO BOTÃO -->
       <input id="refLink" class="ref-input" value="Conecte a carteira..." readonly />
     </aside>
 
-    <section class="shop-area">
+    <!-- SHOP -->
+    <section class="shop">
       <h2>MERCADO DE HARDWARE</h2>
       <div id="gpu-grid" class="gpu-grid"></div>
     </section>
-  </main>
 
-  <footer class="bottom-info">
-      <h3><i class="fas fa-terminal"></i> INFORMAÇÕES DO SISTEMA</h3>
-      <div class="info-text-grid">
-        <p>⚠️ <b>IMPORTANTE:</b> A mineração dura 24h offline.</p>
-        <p>💰 <b>SAQUE:</b> Mínimo de 100 $DYNO.</p>
-        <p>📈 <b>UPGRADE:</b> Compras aumentam seu Poder de Hash.</p>
-        <p>🤝 <b>AFILIADOS:</b> Bônus de 5% sobre indicados.</p>
+    <!-- PAINEL DIREITO (INFO EXTRA) -->
+    <aside class="panel">
+      <h3>INFORMAÇÕES</h3>
+
+      <div class="info-text">
+        <p>⚠️ <b>IMPORTANTE:</b></p>
+        <p>- A mineração dura <b>24h offline</b>.</p>
+        <p>- O saque mínimo é <b>100 DYNO</b>.</p>
+        <p>- Compras desbloqueiam mais <b>hashrate</b>.</p>
+        <p>- Indicação gera <b>5%</b> de bônus.</p>
       </div>
+
       <div class="footer-warning">
-        <p>🚀 POWERED BY BSC NETWORK | DYNO-CRYPTO V2.0 PRO</p>
+        <p>🚀 DYNO-CRYPTO V2.0 PRO</p>
+        <p>POWERED BY BSC NETWORK</p>
       </div>
-  </footer>
+    </aside>
+
+  </main>
 
   <script src="script.js"></script>
 </body>
