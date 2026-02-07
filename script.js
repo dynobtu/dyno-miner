@@ -8,6 +8,8 @@ const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const receptor = "0xe097661503B830ae10e91b01885a4b767A0e9107";
 const tokenAddr = "0xDa9756415A5D92027d994Fd33aC1823bA2fdc9ED";
 
+const PANCAKE_LINK = "https://pancakeswap.finance/swap?chain=bsc&inputCurrency=0x55d398326f99059fF775485246999027B3197955&outputCurrency=0xDa9756415A5D92027d994Fd33aC1823bA2fdc9ED";
+
 const tokenABI = [
   "function transfer(address to, uint256 amount) public returns (bool)",
   "function balanceOf(address account) view returns (uint256)",
@@ -24,6 +26,7 @@ const gpus = [
 
 let userAccount = null;
 let purchaseHistory = JSON.parse(localStorage.getItem("dyno_purchases")) || {};
+let miningLoop = null;
 
 // ===============================
 // 2. FUNÇÕES AUXILIARES
@@ -40,7 +43,7 @@ function getTotalHashrate() {
   for (const gpu of gpus) {
     if (purchaseHistory[gpu.id]) total += gpu.hash;
   }
-  return total;
+  return total || 50; // mínimo 50 se não comprou nada
 }
 
 function updateHashrate() {
@@ -49,32 +52,58 @@ function updateHashrate() {
   if (el) el.innerText = totalHash.toString();
 }
 
-async function criarUsuarioSeNaoExistir() {
-  if (!userAccount) return;
+function setPancakeButton() {
+  const btn = document.getElementById("btnObterDyno");
+  if (btn) btn.href = PANCAKE_LINK;
+}
+
+// ===============================
+// 3. CRIAR OU BUSCAR USUÁRIO
+// ===============================
+async function getOrCreateUser() {
+  if (!userAccount) return null;
 
   const carteira = userAccount.toLowerCase();
 
-  const { data } = await _supabase
+  const { data, error } = await _supabase
     .from("usuarios")
-    .select("carteira")
+    .select("*")
     .eq("carteira", carteira)
-    .single();
+    .maybeSingle();
 
-  if (!data) {
-    await _supabase.from("usuarios").insert([
+  if (error) {
+    console.error("Erro ao buscar usuário:", error);
+    return null;
+  }
+
+  if (data) return data;
+
+  const { data: inserted, error: insertError } = await _supabase
+    .from("usuarios")
+    .insert([
       {
         carteira: carteira,
         saldo_minerado: 0,
         ref_count: 0,
         ref_earnings: 0,
-        hash_rate: 50
+        hash_rate: 50,
+        mining_until: null,
+        last_update: new Date().toISOString()
       }
-    ]);
+    ])
+    .select()
+    .single();
+
+  if (insertError) {
+    console.error("Erro ao criar usuário:", insertError);
+    return null;
   }
+
+  return inserted;
 }
 
 // ===============================
-// 3. CONECTAR WALLET + REDE
+// 4. CONECTAR WALLET
 // ===============================
 async function connectWallet() {
   if (!window.ethereum) {
@@ -96,22 +125,18 @@ async function connectWallet() {
       return;
     }
 
-    await criarUsuarioSeNaoExistir();
-
-    // link afiliado
+    // gerar link afiliado
     const inputRef = document.getElementById("refLink");
     if (inputRef) {
       inputRef.value = `${window.location.origin}${window.location.pathname}?ref=${userAccount.toLowerCase()}`;
     }
 
+    await getOrCreateUser();
     await atualizarSaldo();
-    await atualizarSaldoMineradoSupabase();
-    await atualizarAfiliados();
-
+    await atualizarDadosUsuario();
     renderShop();
     updateHashrate();
-
-    iniciarMineracao();
+    iniciarMineracaoLoop();
 
   } catch (e) {
     console.error(e);
@@ -119,7 +144,7 @@ async function connectWallet() {
   }
 }
 
-// Atualiza ao trocar conta
+// Atualiza ao trocar de conta
 if (window.ethereum) {
   window.ethereum.on("accountsChanged", (accounts) => {
     if (accounts.length > 0) {
@@ -134,7 +159,7 @@ if (window.ethereum) {
 }
 
 // ===============================
-// 4. SALDO TOKEN (CARTEIRA)
+// 5. SALDO TOKEN
 // ===============================
 async function atualizarSaldo() {
   if (!userAccount) return;
@@ -155,7 +180,66 @@ async function atualizarSaldo() {
 }
 
 // ===============================
-// 5. LINK AFILIADO
+// 6. DADOS DO USUÁRIO
+// ===============================
+async function atualizarDadosUsuario() {
+  if (!userAccount) return;
+
+  const carteira = userAccount.toLowerCase();
+
+  const { data, error } = await _supabase
+    .from("usuarios")
+    .select("*")
+    .eq("carteira", carteira)
+    .maybeSingle();
+
+  if (error || !data) {
+    console.error("Erro ao atualizar dados usuário:", error);
+    return;
+  }
+
+  document.getElementById("visualGain").innerText = Number(data.saldo_minerado || 0).toFixed(6);
+  document.getElementById("refCount").innerText = data.ref_count || 0;
+  document.getElementById("refEarnings").innerText = Number(data.ref_earnings || 0).toFixed(2);
+
+  updateTimerUI(data.mining_until);
+}
+
+// ===============================
+// 7. TIMER UI
+// ===============================
+function updateTimerUI(miningUntil) {
+  const btn = document.getElementById("btnActivate");
+  const timerEl = document.getElementById("activationTimer");
+
+  if (!miningUntil) {
+    if (timerEl) timerEl.innerText = "00:00:00";
+    if (btn) {
+      btn.disabled = false;
+      btn.style.opacity = "1";
+    }
+    return;
+  }
+
+  const fim = new Date(miningUntil).getTime();
+  const agora = Date.now();
+
+  if (agora >= fim) {
+    if (timerEl) timerEl.innerText = "00:00:00";
+    if (btn) {
+      btn.disabled = false;
+      btn.style.opacity = "1";
+    }
+  } else {
+    if (btn) {
+      btn.disabled = true;
+      btn.style.opacity = "0.5";
+    }
+  }
+}
+
+// ===============================
+// 8. LINK AFILIADO
 // ===============================
 function copyRefLink() {
   const input = document.getElementById("refLink");
@@ -169,84 +253,46 @@ function copyRefLink() {
 }
 
 // ===============================
-// 6. ATUALIZAR SALDO MINERADO DO SUPABASE
-// ===============================
-async function atualizarSaldoMineradoSupabase() {
-  if (!userAccount) return;
-
-  const { data, error } = await _supabase
-    .from("usuarios")
-    .select("saldo_minerado")
-    .eq("carteira", userAccount.toLowerCase())
-    .single();
-
-  if (!error && data) {
-    document.getElementById("visualGain").innerText =
-      (parseFloat(data.saldo_minerado) || 0).toFixed(6);
-  }
-}
-
-// ===============================
-// 7. AFILIADOS
-// ===============================
-async function atualizarAfiliados() {
-  if (!userAccount) return;
-
-  const { data, error } = await _supabase
-    .from("usuarios")
-    .select("ref_count, ref_earnings")
-    .eq("carteira", userAccount.toLowerCase())
-    .single();
-
-  if (!error && data) {
-    document.getElementById("refCount").innerText = data.ref_count || 0;
-    document.getElementById("refEarnings").innerText = (data.ref_earnings || 0).toFixed(2);
-  }
-}
-
-// ===============================
-// 8. SAQUE
+// 9. SAQUE
 // ===============================
 async function solicitarSaque() {
   if (!userAccount) return alert("Conecte a carteira!");
 
-  const { data, error } = await _supabase
+  const carteira = userAccount.toLowerCase();
+
+  const { data } = await _supabase
     .from("usuarios")
     .select("saldo_minerado")
-    .eq("carteira", userAccount.toLowerCase())
+    .eq("carteira", carteira)
     .single();
 
-  if (error || !data) {
-    return alert("Erro ao buscar saldo.");
-  }
-
-  const saldoAtual = parseFloat(data.saldo_minerado) || 0;
+  const saldoAtual = Number(data?.saldo_minerado || 0);
 
   if (saldoAtual < 100) return alert("Saque mínimo: 100 $DYNO");
 
-  const { error: err2 } = await _supabase.from("saques_pendentes").insert([
+  const { error } = await _supabase.from("saques_pendentes").insert([
     {
-      carteira: userAccount.toLowerCase(),
+      carteira: carteira,
       valor: saldoAtual
     }
   ]);
 
-  if (!err2) {
+  if (!error) {
     await _supabase
       .from("usuarios")
       .update({ saldo_minerado: 0 })
-      .eq("carteira", userAccount.toLowerCase());
+      .eq("carteira", carteira);
 
     document.getElementById("visualGain").innerText = "0.000000";
     alert("✅ Saque solicitado com sucesso!");
   } else {
-    console.error(err2);
+    console.error(error);
     alert("Erro ao processar saque.");
   }
 }
 
 // ===============================
-// 9. COMPRAR GPU
+// 10. COMPRAR GPU
 // ===============================
 async function buyGPU(i) {
   if (!userAccount) return alert("Conecte a carteira!");
@@ -281,7 +327,7 @@ async function buyGPU(i) {
 }
 
 // ===============================
-// 10. RENDER SHOP
+// 11. RENDER SHOP
 // ===============================
 function renderShop() {
   const grid = document.getElementById("gpu-grid");
@@ -307,25 +353,24 @@ function renderShop() {
 }
 
 // ===============================
-// 11. MINERAÇÃO 24H OFFLINE REAL (SUPABASE)
+// 12. MINERAÇÃO OFFLINE REAL (SUPABASE)
 // ===============================
 async function activateMining() {
   if (!userAccount) return alert("Conecte a carteira!");
 
-  const hashrate = getTotalHashrate();
-  if (hashrate <= 0) return alert("Você precisa comprar pelo menos 1 minerador!");
+  const carteira = userAccount.toLowerCase();
 
   const agora = new Date();
-  const miningUntil = new Date(Date.now() + 86400000);
+  const fim = new Date(Date.now() + 86400000);
 
   const { error } = await _supabase
     .from("usuarios")
     .update({
-      mining_until: miningUntil.toISOString(),
+      mining_until: fim.toISOString(),
       last_update: agora.toISOString(),
-      hash_rate: hashrate
+      hash_rate: getTotalHashrate()
     })
-    .eq("carteira", userAccount.toLowerCase());
+    .eq("carteira", carteira);
 
   if (error) {
     console.error(error);
@@ -333,105 +378,136 @@ async function activateMining() {
   }
 
   alert("✅ Mineração ativada por 24 horas!");
-  iniciarMineracao();
+  await atualizarDadosUsuario();
+  iniciarMineracaoLoop();
 }
 
-async function iniciarMineracao() {
+async function calcularMineracaoOffline() {
   if (!userAccount) return;
 
-  const btn = document.getElementById("btnActivate");
-  const timerEl = document.getElementById("activationTimer");
+  const carteira = userAccount.toLowerCase();
 
   const { data, error } = await _supabase
     .from("usuarios")
-    .select("saldo_minerado, mining_until, last_update, hash_rate")
-    .eq("carteira", userAccount.toLowerCase())
+    .select("*")
+    .eq("carteira", carteira)
     .single();
 
-  if (error || !data) {
-    console.error(error);
-    return;
-  }
+  if (error || !data) return;
 
-  if (!data.mining_until || !data.last_update) {
-    if (btn) {
-      btn.disabled = false;
-      btn.style.opacity = "1";
-    }
-    if (timerEl) timerEl.innerText = "00:00:00";
-    return;
-  }
+  if (!data.mining_until || !data.last_update) return;
 
-  let saldoMinerado = parseFloat(data.saldo_minerado) || 0;
-  let lastUpdate = new Date(data.last_update).getTime();
+  const agora = Date.now();
   const miningUntil = new Date(data.mining_until).getTime();
-  const hashrate = parseFloat(data.hash_rate) || getTotalHashrate();
+  const lastUpdate = new Date(data.last_update).getTime();
 
-  const lucroPorSegundo = hashrate > 0 ? (hashrate * 0.0000001) : 0.00001;
+  if (agora <= lastUpdate) return;
 
-  if (btn) {
-    btn.disabled = true;
-    btn.style.opacity = "0.5";
+  const limite = Math.min(agora, miningUntil);
+  const segundos = Math.floor((limite - lastUpdate) / 1000);
+
+  if (segundos <= 0) return;
+
+  const hashrate = Number(data.hash_rate || 50);
+  const lucroPorSegundo = hashrate * 0.0000001;
+
+  const ganho = segundos * lucroPorSegundo;
+  const novoSaldo = Number(data.saldo_minerado || 0) + ganho;
+
+  const { error: updateError } = await _supabase
+    .from("usuarios")
+    .update({
+      saldo_minerado: novoSaldo,
+      last_update: new Date(limite).toISOString()
+    })
+    .eq("carteira", carteira);
+
+  if (updateError) {
+    console.error(updateError);
+    return;
   }
 
-  async function loop() {
+  document.getElementById("visualGain").innerText = novoSaldo.toFixed(6);
+}
+
+function iniciarMineracaoLoop() {
+  if (miningLoop) clearInterval(miningLoop);
+
+  miningLoop = setInterval(async () => {
+    await calcularMineracaoOffline();
+    await atualizarDadosUsuario();
+
+    const { data } = await _supabase
+      .from("usuarios")
+      .select("mining_until")
+      .eq("carteira", userAccount.toLowerCase())
+      .single();
+
+    if (!data?.mining_until) return;
+
+    const fim = new Date(data.mining_until).getTime();
     const agora = Date.now();
+    const restante = fim - agora;
 
-    if (agora >= miningUntil) {
-      const tempoFinal = Math.floor((miningUntil - lastUpdate) / 1000);
-      if (tempoFinal > 0) {
-        saldoMinerado += tempoFinal * lucroPorSegundo;
-      }
+    const timerEl = document.getElementById("activationTimer");
+    if (timerEl) {
+      timerEl.innerText = restante > 0 ? formatTime(restante) : "00:00:00";
+    }
 
-      await _supabase
-        .from("usuarios")
-        .update({
-          saldo_minerado: saldoMinerado,
-          last_update: new Date(miningUntil).toISOString()
-        })
-        .eq("carteira", userAccount.toLowerCase());
-
-      document.getElementById("visualGain").innerText = saldoMinerado.toFixed(6);
-
-      if (btn) {
+    const btn = document.getElementById("btnActivate");
+    if (btn) {
+      if (restante > 0) {
+        btn.disabled = true;
+        btn.style.opacity = "0.5";
+      } else {
         btn.disabled = false;
         btn.style.opacity = "1";
       }
-
-      if (timerEl) timerEl.innerText = "00:00:00";
-      return;
     }
 
-    const tempoPassado = Math.floor((agora - lastUpdate) / 1000);
-
-    if (tempoPassado > 0) {
-      saldoMinerado += tempoPassado * lucroPorSegundo;
-      lastUpdate = agora;
-
-      await _supabase
-        .from("usuarios")
-        .update({
-          saldo_minerado: saldoMinerado,
-          last_update: new Date(agora).toISOString()
-        })
-        .eq("carteira", userAccount.toLowerCase());
-    }
-
-    const restante = miningUntil - agora;
-    if (timerEl) timerEl.innerText = formatTime(restante);
-
-    document.getElementById("visualGain").innerText = saldoMinerado.toFixed(6);
-
-    setTimeout(loop, 10000);
-  }
-
-  loop();
+  }, 2000);
 }
 
 // ===============================
-// 12. INIT
+// 13. AFILIADOS (REGISTRAR REF)
+// ===============================
+async function registrarReferencia() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const ref = urlParams.get("ref");
+
+  if (!ref) return;
+  if (!userAccount) return;
+
+  const carteira = userAccount.toLowerCase();
+
+  if (ref.toLowerCase() === carteira) return;
+
+  const jaRegistrado = localStorage.getItem("ref_registrado");
+  if (jaRegistrado === "1") return;
+
+  const { data: donoRef } = await _supabase
+    .from("usuarios")
+    .select("*")
+    .eq("carteira", ref.toLowerCase())
+    .maybeSingle();
+
+  if (!donoRef) return;
+
+  await _supabase
+    .from("usuarios")
+    .update({
+      ref_count: Number(donoRef.ref_count || 0) + 1
+    })
+    .eq("carteira", ref.toLowerCase());
+
+  localStorage.setItem("ref_registrado", "1");
+}
+
+// ===============================
+// 14. INIT
 // ===============================
 window.onload = () => {
+  setPancakeButton();
   renderShop();
   updateHashrate();
 };
