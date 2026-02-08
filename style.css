@@ -1,58 +1,97 @@
-body {
+/* ===============================
+   RESET / BASE
+================================ */
+* {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background: black;
-  color: #00ff66;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-/* HEADER */
-.topbar {
+body {
+  background: black;
+  color: #00ff66;
+  font-family: "Courier New", monospace;
+  overflow-x: hidden;
+}
+
+/* ===============================
+   HEADER MATRIX
+================================ */
+.matrix-header {
+  position: relative;
+  height: 160px;
+  border-bottom: 2px solid #00ff66;
+  overflow: hidden;
+}
+
+#matrixCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 160px;
+  z-index: 1;
+  opacity: 0.35;
+}
+
+/* conteúdo do header por cima */
+.header-content {
+  position: relative;
+  z-index: 2;
+  height: 160px;
   display: flex;
   justify-content: space-between;
-  padding: 15px;
-  border-bottom: 2px solid #00ff66;
   align-items: center;
+  padding: 0 40px;
+  background: rgba(0, 0, 0, 0.55);
 }
 
 .logo-area {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .logo {
+  font-size: 1.5rem;
   font-weight: bold;
-  font-size: 1.2rem;
+  letter-spacing: 1px;
 }
 
 .sublogo {
-  font-size: 0.8rem;
-  opacity: 0.75;
+  font-size: 0.85rem;
+  opacity: 0.7;
 }
 
 .wallet-area {
   display: flex;
-  gap: 10px;
   align-items: center;
+  gap: 12px;
 }
 
 .wallet-box {
   border: 1px solid #00ff66;
-  padding: 8px 12px;
-  min-width: 120px;
+  padding: 10px 14px;
+  min-width: 150px;
   text-align: center;
+  font-size: 0.9rem;
   background: rgba(0, 0, 0, 0.6);
 }
 
-/* BOTÕES */
+/* ===============================
+   BOTÕES
+================================ */
 .btn {
-  padding: 8px 12px;
+  padding: 10px 14px;
   border: 1px solid #00ff66;
   background: transparent;
   color: #00ff66;
   cursor: pointer;
   text-decoration: none;
+  font-weight: bold;
+  text-transform: uppercase;
   transition: 0.2s;
+  font-size: 0.85rem;
 }
 
 .btn:hover {
@@ -61,18 +100,22 @@ body {
 }
 
 .btn-obter {
-  font-weight: bold;
+  border: 1px solid #00ff66;
+  background: rgba(0, 255, 102, 0.1);
 }
 
 .btn-green {
   width: 100%;
-  padding: 10px;
-  margin-top: 10px;
+  padding: 12px;
+  margin-top: 12px;
   border: 1px solid #00ff66;
-  background: transparent;
+  background: rgba(0, 255, 102, 0.08);
   color: #00ff66;
   cursor: pointer;
+  font-weight: bold;
+  text-transform: uppercase;
   transition: 0.2s;
+  font-size: 0.85rem;
 }
 
 .btn-green:hover {
@@ -80,97 +123,165 @@ body {
   color: black;
 }
 
-/* INFO CARDS */
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ===============================
+   INFO CARDS (TOPO)
+================================ */
 .info-row {
-  display: flex;
-  gap: 10px;
-  padding: 15px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  padding: 25px 30px;
+  max-width: 1250px;
+  margin: 0 auto;
 }
 
 .info-card {
-  flex: 1;
-  min-width: 180px;
   border: 1px solid #00ff66;
-  padding: 10px;
+  padding: 15px;
   text-align: center;
-  background: rgba(0, 0, 0, 0.4);
-  box-shadow: 0 0 10px rgba(0, 255, 102, 0.15);
+  background: rgba(0, 255, 102, 0.05);
+  box-shadow: 0 0 8px rgba(0, 255, 102, 0.08);
+}
+
+.info-card h4 {
+  font-size: 0.85rem;
+  opacity: 0.85;
+  margin-bottom: 10px;
+}
+
+.info-card p {
+  font-size: 1.1rem;
+  font-weight: bold;
 }
 
 .small-info {
-  opacity: 0.7;
+  margin-top: 8px;
   font-size: 0.85rem;
+  opacity: 0.7;
 }
 
-/* GRID PRINCIPAL - AGORA 2 COLUNAS */
+/* ===============================
+   GRID PRINCIPAL
+================================ */
 .main-grid {
+  max-width: 1250px;
+  margin: 0 auto;
+  padding: 15px 30px 40px 30px;
   display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 15px;
-  padding: 15px;
+  grid-template-columns: 320px 1fr;
+  gap: 25px;
 }
 
-/* PAINÉIS */
+/* ===============================
+   PAINEL ESQUERDO
+================================ */
 .panel {
   border: 1px solid #00ff66;
-  padding: 15px;
-  background: rgba(0, 0, 0, 0.45);
-  box-shadow: 0 0 15px rgba(0, 255, 102, 0.12);
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.75);
+  box-shadow: 0 0 12px rgba(0, 255, 102, 0.08);
+  height: fit-content;
+}
+
+.panel h3 {
+  font-size: 0.95rem;
+  margin-bottom: 15px;
+  border-bottom: 1px solid rgba(0, 255, 102, 0.3);
+  padding-bottom: 10px;
+  text-transform: uppercase;
 }
 
 .timer {
-  margin-top: 10px;
-  font-size: 0.9rem;
-  opacity: 0.8;
+  margin-top: 15px;
+  font-size: 0.85rem;
+  opacity: 0.85;
 }
 
-/* SHOP */
+/* input link */
+.ref-input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 12px;
+  border: 1px solid #00ff66;
+  background: black;
+  color: #00ff66;
+  font-size: 0.8rem;
+}
+
+/* ===============================
+   SHOP
+================================ */
 .shop {
   border: 1px solid #00ff66;
-  padding: 15px;
-  background: rgba(0, 0, 0, 0.45);
-  box-shadow: 0 0 15px rgba(0, 255, 102, 0.12);
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.75);
+  box-shadow: 0 0 12px rgba(0, 255, 102, 0.08);
 }
 
+.shop h2 {
+  font-size: 1.1rem;
+  margin-bottom: 15px;
+  border-bottom: 1px solid rgba(0, 255, 102, 0.3);
+  padding-bottom: 10px;
+  text-transform: uppercase;
+}
+
+/* ===============================
+   GPU GRID
+================================ */
 .gpu-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
-  margin-top: 15px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 18px;
 }
 
 .gpu-item {
   border: 1px solid #00ff66;
-  padding: 10px;
+  padding: 14px;
   text-align: center;
   position: relative;
-  background: rgba(0, 0, 0, 0.55);
-  box-shadow: 0 0 10px rgba(0, 255, 102, 0.08);
+  background: rgba(0, 255, 102, 0.03);
   transition: 0.2s;
 }
 
 .gpu-item:hover {
   transform: scale(1.02);
-  box-shadow: 0 0 15px rgba(0, 255, 102, 0.25);
+  box-shadow: 0 0 15px rgba(0, 255, 102, 0.15);
 }
 
 .gpu-item img {
   width: 100%;
-  max-width: 150px;
-  margin: 0 auto;
+  max-width: 160px;
+  margin: 0 auto 12px auto;
   display: block;
+}
+
+.gpu-item h4 {
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+}
+
+.gpu-item p {
+  font-size: 0.8rem;
+  opacity: 0.8;
+  margin-bottom: 6px;
 }
 
 .gpu-item button {
   width: 100%;
-  padding: 8px;
+  padding: 10px;
   border: 1px solid #00ff66;
-  background: transparent;
+  background: rgba(0, 255, 102, 0.07);
   color: #00ff66;
   cursor: pointer;
-  margin-top: 10px;
+  font-weight: bold;
   transition: 0.2s;
+  margin-top: 10px;
 }
 
 .gpu-item button:hover {
@@ -179,100 +290,106 @@ body {
 }
 
 .gpu-item button:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: not-allowed;
 }
 
-/* BADGE LUCRO */
+/* badge lucro */
 .badge-profit {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  border: 1px solid #00ff66;
-  padding: 2px 6px;
+  top: 10px;
+  right: 10px;
+  background: #00ff66;
+  color: black;
+  padding: 3px 8px;
   font-size: 0.75rem;
-  background: rgba(0, 0, 0, 0.7);
+  font-weight: bold;
+  border-radius: 4px;
 }
 
-/* INPUT LINK */
-.ref-input {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #00ff66;
-  background: black;
-  color: #00ff66;
-  margin-top: 10px;
-}
-
-/* =============================== */
-/* FOOTER */
-/* =============================== */
+/* ===============================
+   FOOTER
+================================ */
 .footer {
-  margin-top: 20px;
-  padding: 15px;
+  margin-top: 60px;
+  padding: 35px 20px;
+  border-top: 1px solid rgba(0, 255, 102, 0.25);
+  background: rgba(0, 0, 0, 0.85);
 }
 
 .footer-box {
+  max-width: 900px;
+  margin: 0 auto;
   border: 1px solid #00ff66;
-  padding: 15px;
-  background: rgba(0, 0, 0, 0.45);
-  box-shadow: 0 0 15px rgba(0, 255, 102, 0.12);
-  text-align: center;
-  font-size: 0.95rem;
-  line-height: 1.5;
+  padding: 25px;
+  background: rgba(0, 255, 102, 0.04);
+  box-shadow: 0 0 15px rgba(0, 255, 102, 0.08);
+  text-align: left;
+}
+
+.footer-box h3 {
+  font-size: 1.05rem;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(0, 255, 102, 0.3);
+  padding-bottom: 10px;
+}
+
+.footer-box p {
+  font-size: 0.85rem;
+  opacity: 0.85;
+  margin-bottom: 8px;
+  line-height: 1.4;
 }
 
 .footer-warning {
-  margin-top: 15px;
-  padding-top: 10px;
-  border-top: 1px solid rgba(0, 255, 102, 0.4);
-  font-size: 0.85rem;
-  opacity: 0.8;
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 255, 102, 0.3);
+  text-align: center;
+  font-weight: bold;
+  opacity: 0.85;
 }
 
-/* =============================== */
-/* EFEITO MATRIX (SEM IMAGEM) */
-/* =============================== */
-.matrix-header {
-  position: relative;
-  overflow: hidden;
-  background: black;
-}
-
-.matrix-header::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: repeating-linear-gradient(
-    to bottom,
-    rgba(0, 255, 102, 0.25) 0px,
-    rgba(0, 255, 102, 0.25) 2px,
-    transparent 2px,
-    transparent 10px
-  );
-  animation: matrixMove 3s linear infinite;
-  opacity: 0.25;
-  pointer-events: none;
-}
-
-@keyframes matrixMove {
-  from {
-    transform: translateY(-60px);
+/* ===============================
+   RESPONSIVO
+================================ */
+@media (max-width: 1100px) {
+  .info-row {
+    grid-template-columns: repeat(2, 1fr);
   }
-  to {
-    transform: translateY(60px);
-  }
-}
 
-/* GARANTE QUE O TEXTO FIQUE EM CIMA */
-.topbar * {
-  position: relative;
-  z-index: 2;
-}
-
-/* RESPONSIVO */
-@media (max-width: 1000px) {
   .main-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .panel {
+    order: 1;
+  }
+
+  .shop {
+    order: 2;
+  }
+
+  .header-content {
+    flex-direction: column;
+    gap: 15px;
+    padding: 20px;
+    justify-content: center;
+  }
+
+  .wallet-area {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .wallet-box {
+    min-width: 200px;
+  }
+}
+
+@media (max-width: 600px) {
+  .info-row {
     grid-template-columns: 1fr;
   }
 
@@ -280,8 +397,13 @@ body {
     grid-template-columns: 1fr;
   }
 
-  .wallet-area {
-    flex-wrap: wrap;
-    justify-content: flex-end;
+  .logo {
+    font-size: 1.2rem;
+    text-align: center;
+  }
+
+  .sublogo {
+    text-align: center;
   }
 }
+
