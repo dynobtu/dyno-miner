@@ -1,17 +1,12 @@
 // ===============================
 // 1. CONFIGURAÇÕES
 // ===============================
-const SUPABASE_URL = "https://tdzwbddisdrikzztqoze.supabase.co";
-const SUPABASE_KEY =
-  "sb_publishable_BcNbL1tcyFRTpBRqAxgaEw_4Wq7o-tY";
-
+const SUPABASE_URL = 'https://tdzwbddisdrikzztqoze.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_BcNbL1tcyFRTpBRqAxgaEw_4Wq7o-tY';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const receptor = "0xe097661503B830ae10e91b01885a4b767A0e9107";
 const tokenAddr = "0xDa9756415A5D92027d994Fd33aC1823bA2fdc9ED";
-
-const PANCAKE_LINK =
-  "https://pancakeswap.finance/swap?chain=bsc&inputCurrency=0x55d398326f99059fF775485246999027B3197955&outputCurrency=0xDa9756415A5D92027d994Fd33aC1823bA2fdc9ED";
 
 const tokenABI = [
   "function transfer(address to, uint256 amount) public returns (bool)",
@@ -20,71 +15,22 @@ const tokenABI = [
 ];
 
 // ===============================
-// 2. DYNO LISTA (LOJA)
+// 2. GPUS (VALORES CERTOS)
 // ===============================
 const gpus = [
-  { id: 1, nome: "Dyno Normal", custo: "100", lucro: 5, img: "NORMAL.png", hash: 50 },
-  { id: 2, nome: "Dyno Raro", custo: "200", lucro: 10, img: "RARO.png", hash: 100 },
-  { id: 3, nome: "Dyno Épico", custo: "400", lucro: 15, img: "ÉPICO.png", hash: 200 },
-  { id: 4, nome: "Dyno Lendário", custo: "800", lucro: 20, img: "LENDÁRIO.png", hash: 400 },
-  { id: 5, nome: "Super Lendário", custo: "1600", lucro: 25, img: "SUPER LENDÁRIO.png", hash: 800 }
+  { id: 1, nome: "Dyno Normal", custo: 100, final: 105, img: "NORMAL.png", hash: 50 },
+  { id: 2, nome: "Dyno Raro", custo: 200, final: 220, img: "RARO.png", hash: 100 },
+  { id: 3, nome: "Dyno Épico", custo: 400, final: 460, img: "ÉPICO.png", hash: 200 },
+  { id: 4, nome: "Dyno Lendário", custo: 800, final: 960, img: "LENDÁRIO.png", hash: 400 },
+  { id: 5, nome: "Super Lendário", custo: 1600, final: 2000, img: "SUPER LENDÁRIO.png", hash: 800 }
 ];
 
-// ===============================
-// 3. VARIÁVEIS
-// ===============================
 let userAccount = null;
+let purchaseHistory = JSON.parse(localStorage.getItem("dyno_purchases")) || {};
 let miningLoop = null;
 
-let purchaseHistory = JSON.parse(localStorage.getItem("dyno_purchases")) || {};
-
 // ===============================
-// 4. MATRIX EFFECT
-// ===============================
-function startMatrixEffect() {
-  const canvas = document.getElementById("matrixCanvas");
-  if (!canvas) return;
-
-  const ctx = canvas.getContext("2d");
-
-  function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = 140;
-  }
-
-  resizeCanvas();
-  window.addEventListener("resize", resizeCanvas);
-
-  const letters = "01DYNO$ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  const fontSize = 14;
-
-  let columns = Math.floor(canvas.width / fontSize);
-  let drops = Array(columns).fill(1);
-
-  function draw() {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.12)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.fillStyle = "#00ff66";
-    ctx.font = fontSize + "px monospace";
-
-    for (let i = 0; i < drops.length; i++) {
-      const text = letters.charAt(Math.floor(Math.random() * letters.length));
-      ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-      if (drops[i] * fontSize > canvas.height && Math.random() > 0.97) {
-        drops[i] = 0;
-      }
-
-      drops[i]++;
-    }
-  }
-
-  setInterval(draw, 35);
-}
-
-// ===============================
-// 5. AUXILIARES
+// 3. FUNÇÕES AUXILIARES
 // ===============================
 function formatTime(ms) {
   const h = String(Math.floor(ms / 3600000)).padStart(2, "0");
@@ -95,14 +41,10 @@ function formatTime(ms) {
 
 function getTotalHashrate() {
   let total = 0;
-
   for (const gpu of gpus) {
-    if (purchaseHistory[gpu.id]) {
-      total += gpu.hash;
-    }
+    if (purchaseHistory[gpu.id]) total += gpu.hash;
   }
-
-  return total; // SE NÃO TIVER DYNO, TOTAL = 0 (NÃO MINERA)
+  return total;
 }
 
 function updateHashrate() {
@@ -111,13 +53,31 @@ function updateHashrate() {
   if (el) el.innerText = totalHash.toString();
 }
 
-function setPancakeButton() {
-  const btn = document.getElementById("btnObterDyno");
-  if (btn) btn.href = PANCAKE_LINK;
+// ===============================
+// 4. CALCULAR LUCRO REAL (NOVA MATEMÁTICA)
+// ===============================
+function getLucroTotalPorDia() {
+  let totalLucro = 0;
+
+  for (const gpu of gpus) {
+    if (purchaseHistory[gpu.id]) {
+      const lucro = gpu.final - gpu.custo;
+      totalLucro += lucro;
+    }
+  }
+
+  return totalLucro; // lucro total em 24h
+}
+
+function getLucroPorSegundo() {
+  const lucroDia = getLucroTotalPorDia();
+  if (lucroDia <= 0) return 0;
+
+  return lucroDia / 86400; // 24h = 86400 segundos
 }
 
 // ===============================
-// 6. CRIAR OU BUSCAR USUÁRIO
+// 5. CRIAR OU BUSCAR USUÁRIO
 // ===============================
 async function getOrCreateUser() {
   if (!userAccount) return null;
@@ -162,7 +122,7 @@ async function getOrCreateUser() {
 }
 
 // ===============================
-// 7. CONECTAR WALLET
+// 6. CONECTAR WALLET
 // ===============================
 async function connectWallet() {
   if (!window.ethereum) {
@@ -190,7 +150,6 @@ async function connectWallet() {
       inputRef.value = `${window.location.origin}${window.location.pathname}?ref=${userAccount.toLowerCase()}`;
     }
 
-    await registrarReferencia();
     await getOrCreateUser();
     await atualizarSaldo();
     await atualizarDadosUsuario();
@@ -220,7 +179,7 @@ if (window.ethereum) {
 }
 
 // ===============================
-// 8. SALDO TOKEN
+// 7. SALDO TOKEN
 // ===============================
 async function atualizarSaldo() {
   if (!userAccount) return;
@@ -241,7 +200,7 @@ async function atualizarSaldo() {
 }
 
 // ===============================
-// 9. DADOS DO USUÁRIO
+// 8. DADOS DO USUÁRIO
 // ===============================
 async function atualizarDadosUsuario() {
   if (!userAccount) return;
@@ -267,7 +226,7 @@ async function atualizarDadosUsuario() {
 }
 
 // ===============================
-// 10. TIMER UI
+// 9. TIMER UI
 // ===============================
 function updateTimerUI(miningUntil) {
   const btn = document.getElementById("btnActivate");
@@ -300,7 +259,7 @@ function updateTimerUI(miningUntil) {
 }
 
 // ===============================
-// 11. LINK AFILIADO
+// 10. LINK AFILIADO
 // ===============================
 function copyRefLink() {
   const input = document.getElementById("refLink");
@@ -314,7 +273,7 @@ function copyRefLink() {
 }
 
 // ===============================
-// 12. SAQUE
+// 11. SAQUE
 // ===============================
 async function solicitarSaque() {
   if (!userAccount) return alert("Conecte a carteira!");
@@ -353,7 +312,7 @@ async function solicitarSaque() {
 }
 
 // ===============================
-// 13. COMPRAR DYNO
+// 12. COMPRAR GPU
 // ===============================
 async function buyGPU(i) {
   if (!userAccount) return alert("Conecte a carteira!");
@@ -367,7 +326,7 @@ async function buyGPU(i) {
 
     const tx = await contract.transfer(
       receptor,
-      ethers.utils.parseUnits(gpus[i].custo, dec)
+      ethers.utils.parseUnits(gpus[i].custo.toString(), dec)
     );
 
     await tx.wait();
@@ -388,7 +347,7 @@ async function buyGPU(i) {
 }
 
 // ===============================
-// 14. RENDER SHOP
+// 13. RENDER SHOP
 // ===============================
 function renderShop() {
   const grid = document.getElementById("gpu-grid");
@@ -399,11 +358,11 @@ function renderShop() {
 
     return `
       <div class="gpu-item">
-        <span class="badge-profit">+${g.lucro}%</span>
+        <span class="badge-profit">FINAL: ${g.final}</span>
         <img src="${g.img}" alt="${g.nome}">
         <h4>${g.nome}</h4>
         <p style="font-size:0.8rem; margin: 5px 0;">CUSTO: ${g.custo} DYNO</p>
-        <p style="font-size:0.75rem; opacity:0.7;">HASH: ${g.hash} H/s</p>
+        <p style="font-size:0.75rem; opacity:0.7;">RETORNO: ${g.final} DYNO</p>
 
         <button onclick="buyGPU(${i})" ${dono ? "disabled" : ""}>
           ${dono ? "LOCKED" : "ADQUIRIR"}
@@ -414,18 +373,18 @@ function renderShop() {
 }
 
 // ===============================
-// 15. MINERAÇÃO OFFLINE REAL
+// 14. MINERAÇÃO OFFLINE REAL (SUPABASE)
 // ===============================
 async function activateMining() {
   if (!userAccount) return alert("Conecte a carteira!");
 
-  // SE NÃO TIVER DYNO, NÃO ATIVA
-  const totalHash = getTotalHashrate();
-  if (totalHash <= 0) {
-    return alert("❌ Você precisa comprar pelo menos 1 DYNO para minerar!");
-  }
-
   const carteira = userAccount.toLowerCase();
+
+  // só ativa se tiver pelo menos 1 dyno comprado
+  const lucroDia = getLucroTotalPorDia();
+  if (lucroDia <= 0) {
+    return alert("⚠️ Você precisa comprar um Dyno antes de minerar!");
+  }
 
   const agora = new Date();
   const fim = new Date(Date.now() + 86400000);
@@ -435,7 +394,7 @@ async function activateMining() {
     .update({
       mining_until: fim.toISOString(),
       last_update: agora.toISOString(),
-      hash_rate: totalHash
+      hash_rate: getTotalHashrate()
     })
     .eq("carteira", carteira);
 
@@ -468,9 +427,6 @@ async function calcularMineracaoOffline() {
   const miningUntil = new Date(data.mining_until).getTime();
   const lastUpdate = new Date(data.last_update).getTime();
 
-  // SE JÁ ACABOU, PARA
-  if (agora >= miningUntil) return;
-
   if (agora <= lastUpdate) return;
 
   const limite = Math.min(agora, miningUntil);
@@ -478,13 +434,8 @@ async function calcularMineracaoOffline() {
 
   if (segundos <= 0) return;
 
-  const hashrate = Number(data.hash_rate || 0);
-
-  // SE NÃO TIVER HASH, NÃO MINERA
-  if (hashrate <= 0) return;
-
-  // (mantendo a lógica atual de mineração)
-  const lucroPorSegundo = hashrate * 0.0000001;
+  const lucroPorSegundo = getLucroPorSegundo();
+  if (lucroPorSegundo <= 0) return;
 
   const ganho = segundos * lucroPorSegundo;
   const novoSaldo = Number(data.saldo_minerado || 0) + ganho;
@@ -511,8 +462,6 @@ function iniciarMineracaoLoop() {
   miningLoop = setInterval(async () => {
     await calcularMineracaoOffline();
     await atualizarDadosUsuario();
-
-    if (!userAccount) return;
 
     const { data } = await _supabase
       .from("usuarios")
@@ -546,46 +495,10 @@ function iniciarMineracaoLoop() {
 }
 
 // ===============================
-// 16. AFILIADOS (REGISTRAR REF)
-// ===============================
-async function registrarReferencia() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const ref = urlParams.get("ref");
-
-  if (!ref) return;
-  if (!userAccount) return;
-
-  const carteira = userAccount.toLowerCase();
-
-  if (ref.toLowerCase() === carteira) return;
-
-  const jaRegistrado = localStorage.getItem("ref_registrado");
-  if (jaRegistrado === "1") return;
-
-  const { data: donoRef } = await _supabase
-    .from("usuarios")
-    .select("*")
-    .eq("carteira", ref.toLowerCase())
-    .maybeSingle();
-
-  if (!donoRef) return;
-
-  await _supabase
-    .from("usuarios")
-    .update({
-      ref_count: Number(donoRef.ref_count || 0) + 1
-    })
-    .eq("carteira", ref.toLowerCase());
-
-  localStorage.setItem("ref_registrado", "1");
-}
-
-// ===============================
-// 17. INIT
+// 15. INIT
 // ===============================
 window.onload = () => {
-  startMatrixEffect();
-  setPancakeButton();
   renderShop();
   updateHashrate();
 };
+
