@@ -19,10 +19,10 @@
   <!-- HEADER COM EFEITO MATRIX -->
   <header class="topbar matrix-header">
 
-    <!-- CANVAS MATRIX (FUNDO) -->
+    <!-- CANVAS MATRIX -->
     <canvas id="matrixCanvas"></canvas>
 
-    <!-- CONTEÚDO DO HEADER -->
+    <!-- CONTEÚDO EM CIMA DO MATRIX -->
     <div class="header-content">
       <div class="logo-area">
         <div class="logo">DYNO-CRYPTO V2.0 PRO</div>
@@ -31,7 +31,7 @@
 
       <div class="wallet-area">
         <!-- BOTÃO OBTER DYNO (SÓ AQUI EM CIMA) -->
-        <a class="btn btn-obter" id="btnObterDyno" target="_blank"
+        <a class="btn btn-obter" target="_blank"
           href="https://pancakeswap.finance/swap?chain=bsc&inputCurrency=0x55d398326f99059fF775485246999027B3197955&outputCurrency=0xDa9756415A5D92027d994Fd33aC1823bA2fdc9ED">
           OBTER DYNO
         </a>
@@ -43,6 +43,7 @@
         </div>
       </div>
     </div>
+
   </header>
 
   <!-- INFO CARDS -->
@@ -59,8 +60,8 @@
     </div>
 
     <div class="info-card">
-      <h4>DYNO ATIVOS</h4>
-      <p><span id="hashrate">0</span></p>
+      <h4>PODER DE HASH</h4>
+      <p><span id="hashrate">0</span> H/s</p>
     </div>
 
     <div class="info-card">
@@ -93,9 +94,8 @@
         👥 COPIAR LINK DE INDICAÇÃO
       </button>
 
-      <!-- INPUT LINK -->
+      <!-- INPUT LINK EMBAIXO DO BOTÃO -->
       <input id="refLink" class="ref-input" value="Conecte a carteira..." readonly />
-
     </aside>
 
     <!-- SHOP -->
@@ -127,3 +127,4 @@
   <script src="script.js"></script>
 </body>
 </html>
+
