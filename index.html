@@ -18,22 +18,29 @@
 
   <!-- HEADER COM EFEITO MATRIX -->
   <header class="topbar matrix-header">
-    <div class="logo-area">
-      <div class="logo">DYNO-CRYPTO V2.0 PRO</div>
-      <div class="sublogo">MINERAÇÃO ONLINE / OFFLINE (24H)</div>
-    </div>
 
-    <div class="wallet-area">
-      <!-- BOTÃO OBTER DYNO (SÓ AQUI EM CIMA) -->
-      <a class="btn btn-obter" target="_blank"
-        href="https://pancakeswap.finance/swap?chain=bsc&inputCurrency=0x55d398326f99059fF775485246999027B3197955&outputCurrency=0xDa9756415A5D92027d994Fd33aC1823bA2fdc9ED">
-        OBTER DYNO
-      </a>
+    <!-- CANVAS MATRIX (FUNDO) -->
+    <canvas id="matrixCanvas"></canvas>
 
-      <button class="btn" onclick="connectWallet()">CONECTAR</button>
+    <!-- CONTEÚDO DO HEADER -->
+    <div class="header-content">
+      <div class="logo-area">
+        <div class="logo">DYNO-CRYPTO V2.0 PRO</div>
+        <div class="sublogo">MINERAÇÃO ONLINE / OFFLINE (24H)</div>
+      </div>
 
-      <div class="wallet-box">
-        <span id="walletDisplay">---</span>
+      <div class="wallet-area">
+        <!-- BOTÃO OBTER DYNO (SÓ AQUI EM CIMA) -->
+        <a class="btn btn-obter" id="btnObterDyno" target="_blank"
+          href="https://pancakeswap.finance/swap?chain=bsc&inputCurrency=0x55d398326f99059fF775485246999027B3197955&outputCurrency=0xDa9756415A5D92027d994Fd33aC1823bA2fdc9ED">
+          OBTER DYNO
+        </a>
+
+        <button class="btn" onclick="connectWallet()">CONECTAR</button>
+
+        <div class="wallet-box">
+          <span id="walletDisplay">---</span>
+        </div>
       </div>
     </div>
   </header>
@@ -52,8 +59,8 @@
     </div>
 
     <div class="info-card">
-      <h4>PODER DE HASH</h4>
-      <p><span id="hashrate">0</span> H/s</p>
+      <h4>DYNO ATIVOS</h4>
+      <p><span id="hashrate">0</span></p>
     </div>
 
     <div class="info-card">
@@ -62,7 +69,7 @@
     </div>
   </section>
 
-  <!-- GRID PRINCIPAL (AGORA SÓ 2 COLUNAS) -->
+  <!-- GRID PRINCIPAL -->
   <main class="main-grid">
 
     <!-- PAINEL ESQUERDO -->
@@ -86,8 +93,9 @@
         👥 COPIAR LINK DE INDICAÇÃO
       </button>
 
-      <!-- INPUT LINK EMBAIXO DO BOTÃO -->
+      <!-- INPUT LINK -->
       <input id="refLink" class="ref-input" value="Conecte a carteira..." readonly />
+
     </aside>
 
     <!-- SHOP -->
@@ -98,7 +106,7 @@
 
   </main>
 
-  <!-- RODAPÉ COM AS INFORMAÇÕES -->
+  <!-- RODAPÉ -->
   <footer class="footer">
     <div class="footer-box">
       <h3>INFORMAÇÕES IMPORTANTES</h3>
