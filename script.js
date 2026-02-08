@@ -1,8 +1,8 @@
 /* ===============================
    CONFIG SUPABASE
 ================================ */
-const SUPABASE_URL = "COLOQUE_AQUI_SUA_URL";
-const SUPABASE_KEY = "COLOQUE_AQUI_SUA_ANON_KEY";
+const SUPABASE_URL = "https://tdzwbddisdrikzztqoze.supabase.co";
+const SUPABASE_KEY = "sb_publishable_BcNbL1tcyFRTpBRqAxgaEw_4Wq7o-tY";
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -359,3 +359,4 @@ window.addEventListener("load", () => {
   setInterval(atualizarTimer, 1000);
   startMiningLoop();
 });
+
