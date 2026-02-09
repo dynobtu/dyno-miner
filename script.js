@@ -26,7 +26,13 @@ const gpus = [
 ];
 
 let userAccount = null;
+
+// cache local (não é mais a fonte real, só fallback)
 let purchaseHistory = JSON.parse(localStorage.getItem("dyno_purchases")) || {};
+
+// compras reais vindas do Supabase
+let purchasedDynos = {};
+
 let miningLoop = null;
 
 // ===============================
@@ -42,7 +48,7 @@ function formatTime(ms) {
 function getTotalHashrate() {
   let total = 0;
   for (const gpu of gpus) {
-    if (purchaseHistory[gpu.id]) total += gpu.hash;
+    if (purchasedDynos[gpu.id]) total += gpu.hash;
   }
   return total;
 }
@@ -54,13 +60,13 @@ function updateHashrate() {
 }
 
 // ===============================
-// 4. CALCULAR LUCRO REAL (NOVA MATEMÁTICA)
+// 4. CALCULAR LUCRO REAL (MATEMÁTICA CERTA)
 // ===============================
 function getLucroTotalPorDia() {
   let totalLucro = 0;
 
   for (const gpu of gpus) {
-    if (purchaseHistory[gpu.id]) {
+    if (purchasedDynos[gpu.id]) {
       const lucro = gpu.final - gpu.custo;
       totalLucro += lucro;
     }
@@ -73,11 +79,41 @@ function getLucroPorSegundo() {
   const lucroDia = getLucroTotalPorDia();
   if (lucroDia <= 0) return 0;
 
-  return lucroDia / 86400; // 24h = 86400 segundos
+  return lucroDia / 86400;
 }
 
 // ===============================
-// 5. CRIAR OU BUSCAR USUÁRIO
+// 5. BUSCAR COMPRAS DO SUPABASE
+// ===============================
+async function carregarDynosComprados() {
+  if (!userAccount) return;
+
+  const carteira = userAccount.toLowerCase();
+
+  const { data, error } = await _supabase
+    .from("dynos_comprados")
+    .select("*")
+    .eq("carteira", carteira);
+
+  if (error) {
+    console.error("Erro ao carregar dynos:", error);
+    return;
+  }
+
+  purchasedDynos = {};
+
+  if (data && data.length > 0) {
+    for (const item of data) {
+      purchasedDynos[item.dyno_id] = true;
+    }
+  }
+
+  // salva cache no localStorage também
+  localStorage.setItem("dyno_purchases", JSON.stringify(purchasedDynos));
+}
+
+// ===============================
+// 6. CRIAR OU BUSCAR USUÁRIO
 // ===============================
 async function getOrCreateUser() {
   if (!userAccount) return null;
@@ -122,7 +158,7 @@ async function getOrCreateUser() {
 }
 
 // ===============================
-// 6. CONECTAR WALLET
+// 7. CONECTAR WALLET
 // ===============================
 async function connectWallet() {
   if (!window.ethereum) {
@@ -151,6 +187,8 @@ async function connectWallet() {
     }
 
     await getOrCreateUser();
+    await carregarDynosComprados();
+
     await atualizarSaldo();
     await atualizarDadosUsuario();
 
@@ -166,10 +204,10 @@ async function connectWallet() {
 
 // Atualiza ao trocar de conta
 if (window.ethereum) {
-  window.ethereum.on("accountsChanged", (accounts) => {
+  window.ethereum.on("accountsChanged", async (accounts) => {
     if (accounts.length > 0) {
       userAccount = accounts[0];
-      connectWallet();
+      await connectWallet();
     }
   });
 
@@ -179,7 +217,7 @@ if (window.ethereum) {
 }
 
 // ===============================
-// 7. SALDO TOKEN
+// 8. SALDO TOKEN
 // ===============================
 async function atualizarSaldo() {
   if (!userAccount) return;
@@ -200,7 +238,7 @@ async function atualizarSaldo() {
 }
 
 // ===============================
-// 8. DADOS DO USUÁRIO
+// 9. DADOS DO USUÁRIO
 // ===============================
 async function atualizarDadosUsuario() {
   if (!userAccount) return;
@@ -226,7 +264,7 @@ async function atualizarDadosUsuario() {
 }
 
 // ===============================
-// 9. TIMER UI
+// 10. TIMER UI
 // ===============================
 function updateTimerUI(miningUntil) {
   const btn = document.getElementById("btnActivate");
@@ -259,7 +297,7 @@ function updateTimerUI(miningUntil) {
 }
 
 // ===============================
-// 10. LINK AFILIADO
+// 11. LINK AFILIADO
 // ===============================
 function copyRefLink() {
   const input = document.getElementById("refLink");
@@ -273,49 +311,68 @@ function copyRefLink() {
 }
 
 // ===============================
-// 11. SAQUE
+// 12. SAQUE (CORRIGIDO)
 // ===============================
 async function solicitarSaque() {
   if (!userAccount) return alert("Conecte a carteira!");
 
   const carteira = userAccount.toLowerCase();
 
-  const { data } = await _supabase
+  const { data, error: saldoError } = await _supabase
     .from("usuarios")
     .select("saldo_minerado")
     .eq("carteira", carteira)
     .single();
 
+  if (saldoError) {
+    console.error(saldoError);
+    return alert("Erro ao buscar saldo.");
+  }
+
   const saldoAtual = Number(data?.saldo_minerado || 0);
 
   if (saldoAtual < 100) return alert("Saque mínimo: 100 $DYNO");
 
-  const { error } = await _supabase.from("saques_pendentes").insert([
-    {
-      carteira: carteira,
-      valor: saldoAtual
-    }
-  ]);
+  const { error: insertError } = await _supabase
+    .from("saques_pendentes")
+    .insert([
+      {
+        carteira_usuario: carteira,
+        valor_solicitado: saldoAtual,
+        status: "pendente"
+      }
+    ]);
 
-  if (!error) {
-    await _supabase
-      .from("usuarios")
-      .update({ saldo_minerado: 0 })
-      .eq("carteira", carteira);
-
-    document.getElementById("visualGain").innerText = "0.000000";
-    alert("✅ Saque solicitado com sucesso!");
-  } else {
-    console.error(error);
-    alert("Erro ao processar saque.");
+  if (insertError) {
+    console.error(insertError);
+    return alert("Erro ao processar saque.");
   }
+
+  const { error: updateError } = await _supabase
+    .from("usuarios")
+    .update({ saldo_minerado: 0 })
+    .eq("carteira", carteira);
+
+  if (updateError) {
+    console.error(updateError);
+    return alert("Erro ao zerar saldo após saque.");
+  }
+
+  document.getElementById("visualGain").innerText = "0.000000";
+  alert("✅ Saque solicitado com sucesso!");
 }
 
 // ===============================
-// 12. COMPRAR GPU
+// 13. COMPRAR GPU (AGORA SALVA NO SUPABASE)
 // ===============================
 async function buyGPU(i) {
   if (!userAccount) return alert("Conecte a carteira!");
+
+  const carteira = userAccount.toLowerCase();
+
+  if (purchasedDynos[gpus[i].id]) {
+    return alert("Você já possui esse Dyno!");
+  }
 
   try {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -331,8 +388,23 @@ async function buyGPU(i) {
 
     await tx.wait();
 
-    purchaseHistory[gpus[i].id] = Date.now();
-    localStorage.setItem("dyno_purchases", JSON.stringify(purchaseHistory));
+    // salva compra no supabase
+    const { error: insertError } = await _supabase
+      .from("dynos_comprados")
+      .insert([
+        {
+          carteira: carteira,
+          dyno_id: gpus[i].id
+        }
+      ]);
+
+    if (insertError) {
+      console.error(insertError);
+      return alert("Erro ao salvar compra no servidor.");
+    }
+
+    // atualiza lista comprada
+    await carregarDynosComprados();
 
     renderShop();
     updateHashrate();
@@ -347,14 +419,14 @@ async function buyGPU(i) {
 }
 
 // ===============================
-// 13. RENDER SHOP
+// 14. RENDER SHOP (BASEADO NO SUPABASE)
 // ===============================
 function renderShop() {
   const grid = document.getElementById("gpu-grid");
   if (!grid) return;
 
   grid.innerHTML = gpus.map((g, i) => {
-    const dono = purchaseHistory[g.id];
+    const dono = purchasedDynos[g.id];
 
     return `
       <div class="gpu-item">
@@ -373,14 +445,16 @@ function renderShop() {
 }
 
 // ===============================
-// 14. MINERAÇÃO OFFLINE REAL (SUPABASE)
+// 15. MINERAÇÃO OFFLINE REAL (SUPABASE)
 // ===============================
 async function activateMining() {
   if (!userAccount) return alert("Conecte a carteira!");
 
   const carteira = userAccount.toLowerCase();
 
-  // só ativa se tiver pelo menos 1 dyno comprado
+  // recarrega compras reais
+  await carregarDynosComprados();
+
   const lucroDia = getLucroTotalPorDia();
   if (lucroDia <= 0) {
     return alert("⚠️ Você precisa comprar um Dyno antes de minerar!");
@@ -412,6 +486,9 @@ async function calcularMineracaoOffline() {
   if (!userAccount) return;
 
   const carteira = userAccount.toLowerCase();
+
+  // sempre garante que está usando dados reais
+  await carregarDynosComprados();
 
   const { data, error } = await _supabase
     .from("usuarios")
@@ -495,10 +572,12 @@ function iniciarMineracaoLoop() {
 }
 
 // ===============================
-// 15. INIT
+// 16. INIT
 // ===============================
-window.onload = () => {
+window.onload = async () => {
   renderShop();
   updateHashrate();
 };
+
+
 
