@@ -54,7 +54,7 @@ function updateHashrate() {
 }
 
 // ===============================
-// 4. CALCULAR LUCRO REAL (MATEMÁTICA CERTA)
+// 4. CALCULAR LUCRO REAL
 // ===============================
 function getLucroTotalPorDia() {
   let totalLucro = 0;
@@ -183,7 +183,8 @@ async function getOrCreateUser() {
         ref_earnings: 0,
         hash_rate: 0,
         mining_until: null,
-        last_update: new Date().toISOString()
+        last_update: new Date().toISOString(),
+        indicado_por: null
       }
     ])
     .select()
@@ -350,7 +351,54 @@ function copyRefLink() {
 }
 
 // ===============================
-// 13. SAQUE (SOMA MINERAÇÃO + INDICAÇÃO + TAXA 5%)
+// 13. RESGATAR COMISSÃO PARA SALDO MINERADO
+// ===============================
+async function resgatarComissaoParaSaldo() {
+  if (!userAccount) return alert("Conecte a carteira!");
+
+  const carteira = userAccount.toLowerCase();
+
+  const { data, error } = await _supabase
+    .from("usuarios")
+    .select("saldo_minerado, ref_earnings")
+    .eq("carteira", carteira)
+    .single();
+
+  if (error) {
+    console.error(error);
+    return alert("Erro ao buscar comissão.");
+  }
+
+  const minerado = Number(data.saldo_minerado || 0);
+  const comissao = Number(data.ref_earnings || 0);
+
+  if (comissao <= 0) {
+    return alert("Você não tem comissão disponível.");
+  }
+
+  const novoSaldo = minerado + comissao;
+
+  const { error: updateError } = await _supabase
+    .from("usuarios")
+    .update({
+      saldo_minerado: novoSaldo,
+      ref_earnings: 0
+    })
+    .eq("carteira", carteira);
+
+  if (updateError) {
+    console.error(updateError);
+    return alert("Erro ao resgatar comissão.");
+  }
+
+  document.getElementById("visualGain").innerText = novoSaldo.toFixed(6);
+  document.getElementById("refEarnings").innerText = "0.00";
+
+  alert(`✅ Comissão de ${comissao.toFixed(2)} DYNO adicionada ao saldo minerado!`);
+}
+
+// ===============================
+// 14. SAQUE (SOMA MINERAÇÃO + INDICAÇÃO + TAXA 5%)
 // ===============================
 async function solicitarSaque() {
   if (!userAccount) return alert("Conecte a carteira!");
@@ -423,7 +471,7 @@ async function solicitarSaque() {
 }
 
 // ===============================
-// 14. PAGAR COMISSÃO DE INDICAÇÃO (10%)
+// 15. PAGAR COMISSÃO DE INDICAÇÃO (10%)
 // ===============================
 async function pagarComissaoIndicacao(valorCompra, comprador) {
   try {
@@ -443,7 +491,6 @@ async function pagarComissaoIndicacao(valorCompra, comprador) {
 
     const comissao = valorCompra * 0.10;
 
-    // atualiza ref_earnings do patrocinador
     const { data: sponsorData } = await _supabase
       .from("usuarios")
       .select("ref_earnings")
@@ -458,7 +505,6 @@ async function pagarComissaoIndicacao(valorCompra, comprador) {
       .update({ ref_earnings: novo })
       .eq("carteira", patrocinador);
 
-    // salva histórico
     await _supabase
       .from("ref_comissoes")
       .insert([
@@ -476,7 +522,7 @@ async function pagarComissaoIndicacao(valorCompra, comprador) {
 }
 
 // ===============================
-// 15. COMPRAR GPU (SALVA NO SUPABASE + PAGA INDICAÇÃO)
+// 16. COMPRAR GPU (SALVA NO SUPABASE + PAGA INDICAÇÃO)
 // ===============================
 async function buyGPU(i) {
   if (!userAccount) return alert("Conecte a carteira!");
@@ -515,7 +561,6 @@ async function buyGPU(i) {
       return alert("Erro ao salvar compra no servidor.");
     }
 
-    // paga comissão de indicação
     await pagarComissaoIndicacao(gpus[i].custo, carteira);
 
     await carregarDynosComprados();
@@ -534,7 +579,7 @@ async function buyGPU(i) {
 }
 
 // ===============================
-// 16. RENDER SHOP
+// 17. RENDER SHOP
 // ===============================
 function renderShop() {
   const grid = document.getElementById("gpu-grid");
@@ -550,7 +595,6 @@ function renderShop() {
         <h4>${g.nome}</h4>
         <p style="font-size:0.8rem; margin: 5px 0;">CUSTO: ${g.custo} DYNO</p>
         <p style="font-size:0.75rem; opacity:0.7;">RETORNO: ${g.final} DYNO</p>
-
         <button onclick="buyGPU(${i})" ${dono ? "disabled" : ""}>
           ${dono ? "LOCKED" : "ADQUIRIR"}
         </button>
@@ -560,7 +604,7 @@ function renderShop() {
 }
 
 // ===============================
-// 17. MINERAÇÃO OFFLINE REAL
+// 18. MINERAÇÃO OFFLINE REAL
 // ===============================
 async function activateMining() {
   if (!userAccount) return alert("Conecte a carteira!");
@@ -685,12 +729,13 @@ function iniciarMineracaoLoop() {
 }
 
 // ===============================
-// 18. INIT
+// 19. INIT
 // ===============================
 window.onload = async () => {
   renderShop();
   updateHashrate();
 };
+
 
 
 
