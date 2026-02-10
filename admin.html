@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PAINEL ADMIN - SAQUES</title>
+
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- ethers -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+
+  <!-- supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+
+  <header class="topbar matrix-header">
+    <div class="logo-area">
+      <div class="logo">PAINEL ADMIN</div>
+      <div class="sublogo">LIBERAÇÃO DE SAQUES</div>
+    </div>
+
+    <div class="wallet-area">
+      <button class="btn" onclick="connectAdminWallet()">CONECTAR ADMIN</button>
+
+      <div class="wallet-box">
+        <span id="adminWalletDisplay">---</span>
+      </div>
+    </div>
+  </header>
+
+  <main style="padding:20px;">
+    <h2 style="text-align:center; margin-bottom:20px;">SAQUES PENDENTES</h2>
+
+    <div id="saquesList" style="max-width:1000px; margin:auto;"></div>
+  </main>
+
+  <script src="admin.js"></script>
+</body>
+</html>
