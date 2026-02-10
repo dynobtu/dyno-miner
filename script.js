@@ -1,8 +1,8 @@
 // ===============================
 // 1. CONFIGURAÇÕES
 // ===============================
-const SUPABASE_URL = 'https://tdzwbddisdrikzztqoze.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_BcNbL1tcyFRTpBRqAxgaEw_4Wq7o-tY';
+const SUPABASE_URL = "https://tdzwbddisdrikzztqoze.supabase.co";
+const SUPABASE_KEY = "sb_publishable_BcNbL1tcyFRTpBRqAxgaEw_4Wq7o-tY";
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const receptor = "0xe097661503B830ae10e91b01885a4b767A0e9107";
@@ -15,7 +15,7 @@ const tokenABI = [
 ];
 
 // ===============================
-// 2. GPUS (VALORES CERTOS)
+// 2. GPUS
 // ===============================
 const gpus = [
   { id: 1, nome: "Dyno Normal", custo: 100, final: 105, img: "NORMAL.png", hash: 50 },
@@ -31,7 +31,7 @@ let miningLoop = null;
 let isConnecting = false;
 
 // ===============================
-// 3. MATRIX $ NO HEADER
+// 3. MATRIX $ (SÓ NO TOPO)
 // ===============================
 function startMatrixEffect() {
   const canvas = document.getElementById("matrixCanvas");
@@ -121,12 +121,11 @@ function getLucroTotalPorDia() {
 function getLucroPorSegundo() {
   const lucroDia = getLucroTotalPorDia();
   if (lucroDia <= 0) return 0;
-
   return lucroDia / 86400;
 }
 
 // ===============================
-// 6. BUSCAR COMPRAS DO SUPABASE
+// 6. BUSCAR COMPRAS
 // ===============================
 async function carregarDynosComprados() {
   if (!userAccount) return;
@@ -144,7 +143,6 @@ async function carregarDynosComprados() {
   }
 
   purchasedDynos = {};
-
   if (data && data.length > 0) {
     for (const item of data) {
       purchasedDynos[item.dyno_id] = true;
@@ -399,7 +397,7 @@ function copyRefLink() {
 }
 
 // ===============================
-// 14. RESGATAR COMISSÃO PARA SALDO MINERADO
+// 14. RESGATAR COMISSÃO
 // ===============================
 async function resgatarComissaoParaSaldo() {
   if (!userAccount) return alert("Conecte a carteira!");
@@ -446,13 +444,30 @@ async function resgatarComissaoParaSaldo() {
 }
 
 // ===============================
-// 15. SAQUE
+// 15. SAQUE (CORRIGIDO)
 // ===============================
 async function solicitarSaque() {
   if (!userAccount) return alert("Conecte a carteira!");
 
   const carteira = userAccount.toLowerCase();
 
+  // 1) Verifica se já existe saque pendente
+  const { data: saqueExistente, error: checkError } = await _supabase
+    .from("saques_pendentes")
+    .select("*")
+    .eq("carteira_usuario", carteira)
+    .eq("status", "pendente")
+    .maybeSingle();
+
+  if (checkError) {
+    console.error("Erro check saque pendente:", checkError);
+  }
+
+  if (saqueExistente) {
+    return alert("⚠️ Você já tem um saque pendente. Aguarde o processamento.");
+  }
+
+  // 2) Buscar saldo
   const { data, error: saldoError } = await _supabase
     .from("usuarios")
     .select("saldo_minerado, ref_earnings")
@@ -460,7 +475,7 @@ async function solicitarSaque() {
     .single();
 
   if (saldoError) {
-    console.error(saldoError);
+    console.error("Erro saldo:", saldoError);
     return alert("Erro ao buscar saldo.");
   }
 
@@ -476,6 +491,7 @@ async function solicitarSaque() {
   const taxa = saldoTotal * 0.05;
   const valorFinal = saldoTotal - taxa;
 
+  // 3) Inserir saque pendente
   const { error: insertError } = await _supabase
     .from("saques_pendentes")
     .insert([
@@ -484,15 +500,17 @@ async function solicitarSaque() {
         valor_solicitado: saldoTotal,
         taxa: taxa,
         valor_final: valorFinal,
-        status: "pendente"
+        status: "pendente",
+        created_at: new Date().toISOString()
       }
     ]);
 
   if (insertError) {
-    console.error(insertError);
-    return alert("Erro ao processar saque.");
+    console.error("Erro insert saque:", insertError);
+    return alert("❌ Erro ao processar saque. Verifique se o Supabase está bloqueando (RLS).");
   }
 
+  // 4) Zerar saldo
   const { error: updateError } = await _supabase
     .from("usuarios")
     .update({
@@ -519,7 +537,7 @@ async function solicitarSaque() {
 }
 
 // ===============================
-// 16. PAGAR COMISSÃO DE INDICAÇÃO (10%)
+// 16. PAGAR COMISSÃO (10%)
 // ===============================
 async function pagarComissaoIndicacao(valorCompra, comprador) {
   try {
@@ -652,7 +670,7 @@ function renderShop() {
 }
 
 // ===============================
-// 19. MINERAÇÃO OFFLINE REAL
+// 19. MINERAÇÃO OFFLINE
 // ===============================
 async function activateMining() {
   if (!userAccount) return alert("Conecte a carteira!");
@@ -702,7 +720,6 @@ async function calcularMineracaoOffline() {
     .single();
 
   if (error || !data) return;
-
   if (!data.mining_until || !data.last_update) return;
 
   const agora = Date.now();
@@ -781,6 +798,8 @@ window.onload = async () => {
   updateHashrate();
   startMatrixEffect();
 };
+
+
 
 
 
