@@ -26,10 +26,8 @@ const gpus = [
 ];
 
 let userAccount = null;
-let miningLoop = null;
-
-// compras reais vindas do Supabase
 let purchasedDynos = {};
+let miningLoop = null;
 
 // ===============================
 // 3. FUNÇÕES AUXILIARES
@@ -74,6 +72,7 @@ function getLucroTotalPorDia() {
 function getLucroPorSegundo() {
   const lucroDia = getLucroTotalPorDia();
   if (lucroDia <= 0) return 0;
+
   return lucroDia / 86400;
 }
 
@@ -105,7 +104,56 @@ async function carregarDynosComprados() {
 }
 
 // ===============================
-// 6. CRIAR OU BUSCAR USUÁRIO
+// 6. SISTEMA DE INDICAÇÃO (REGISTRAR REF)
+// ===============================
+async function registrarIndicacaoSeExistir() {
+  if (!userAccount) return;
+
+  const carteira = userAccount.toLowerCase();
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const ref = urlParams.get("ref");
+
+  if (!ref) return;
+  if (ref.toLowerCase() === carteira) return;
+
+  const { data: userData } = await _supabase
+    .from("usuarios")
+    .select("carteira, indicado_por")
+    .eq("carteira", carteira)
+    .maybeSingle();
+
+  // se já tem indicado_por, não mexe
+  if (userData?.indicado_por) return;
+
+  // salva quem indicou
+  const { error: updateError } = await _supabase
+    .from("usuarios")
+    .update({ indicado_por: ref.toLowerCase() })
+    .eq("carteira", carteira);
+
+  if (updateError) {
+    console.error("Erro ao salvar indicado_por:", updateError);
+    return;
+  }
+
+  // soma +1 no contador do patrocinador
+  const { data: patrocinador } = await _supabase
+    .from("usuarios")
+    .select("ref_count")
+    .eq("carteira", ref.toLowerCase())
+    .maybeSingle();
+
+  const atual = Number(patrocinador?.ref_count || 0);
+
+  await _supabase
+    .from("usuarios")
+    .update({ ref_count: atual + 1 })
+    .eq("carteira", ref.toLowerCase());
+}
+
+// ===============================
+// 7. CRIAR OU BUSCAR USUÁRIO
 // ===============================
 async function getOrCreateUser() {
   if (!userAccount) return null;
@@ -150,66 +198,6 @@ async function getOrCreateUser() {
 }
 
 // ===============================
-// 7. REGISTRAR REFERÊNCIA (AFILIADO)
-// ===============================
-async function registrarReferencia() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const ref = urlParams.get("ref");
-
-  if (!ref) return;
-  if (!userAccount) return;
-
-  const indicado = userAccount.toLowerCase();
-  const indicador = ref.toLowerCase();
-
-  if (indicador === indicado) return;
-
-  if (localStorage.getItem("ref_registrado") === "1") return;
-
-  const { data: existe } = await _supabase
-    .from("referencias")
-    .select("*")
-    .eq("carteira_indicado", indicado)
-    .maybeSingle();
-
-  if (existe) {
-    localStorage.setItem("ref_registrado", "1");
-    return;
-  }
-
-  const { data: donoRef } = await _supabase
-    .from("usuarios")
-    .select("*")
-    .eq("carteira", indicador)
-    .maybeSingle();
-
-  if (!donoRef) return;
-
-  const { error } = await _supabase
-    .from("referencias")
-    .insert([
-      {
-        carteira_indicado: indicado,
-        carteira_indicador: indicador
-      }
-    ]);
-
-  if (error) {
-    console.error("Erro ao registrar referência:", error);
-    return;
-  }
-
-  await _supabase
-    .from("usuarios")
-    .update({
-      ref_count: Number(donoRef.ref_count || 0) + 1
-    })
-    .eq("carteira", indicador);
-
-  localStorage.setItem("ref_registrado", "1");
-}
-
-// ===============================
 // 8. CONECTAR WALLET
 // ===============================
 async function connectWallet() {
@@ -238,7 +226,7 @@ async function connectWallet() {
     }
 
     await getOrCreateUser();
-    await registrarReferencia();
+    await registrarIndicacaoSeExistir();
     await carregarDynosComprados();
 
     await atualizarSaldo();
@@ -252,6 +240,19 @@ async function connectWallet() {
     console.error(e);
     alert("Erro ao conectar carteira.");
   }
+}
+
+if (window.ethereum) {
+  window.ethereum.on("accountsChanged", async (accounts) => {
+    if (accounts.length > 0) {
+      userAccount = accounts[0];
+      await connectWallet();
+    }
+  });
+
+  window.ethereum.on("chainChanged", () => {
+    window.location.reload();
+  });
 }
 
 // ===============================
@@ -349,41 +350,7 @@ function copyRefLink() {
 }
 
 // ===============================
-// 13. PAGAR COMISSÃO 10% PARA INDICADOR
-// ===============================
-async function pagarComissaoIndicador(valorCompra) {
-  if (!userAccount) return;
-
-  const indicado = userAccount.toLowerCase();
-
-  const { data: refData, error } = await _supabase
-    .from("referencias")
-    .select("*")
-    .eq("carteira_indicado", indicado)
-    .maybeSingle();
-
-  if (error || !refData) return;
-
-  const indicador = refData.carteira_indicador;
-  const bonus = valorCompra * 0.10;
-
-  const { data: userIndicador } = await _supabase
-    .from("usuarios")
-    .select("ref_earnings")
-    .eq("carteira", indicador)
-    .maybeSingle();
-
-  const atual = Number(userIndicador?.ref_earnings || 0);
-  const novo = atual + bonus;
-
-  await _supabase
-    .from("usuarios")
-    .update({ ref_earnings: novo })
-    .eq("carteira", indicador);
-}
-
-// ===============================
-// 14. SAQUE (SALDO + REF + TAXA 5%)
+// 13. SAQUE (SOMA MINERAÇÃO + INDICAÇÃO + TAXA 5%)
 // ===============================
 async function solicitarSaque() {
   if (!userAccount) return alert("Conecte a carteira!");
@@ -402,23 +369,25 @@ async function solicitarSaque() {
   }
 
   const saldoMinerado = Number(data?.saldo_minerado || 0);
-  const saldoRef = Number(data?.ref_earnings || 0);
+  const saldoIndicacao = Number(data?.ref_earnings || 0);
 
-  const total = saldoMinerado + saldoRef;
+  const saldoTotal = saldoMinerado + saldoIndicacao;
 
-  if (total < 100) return alert("Saque mínimo: 100 $DYNO");
+  if (saldoTotal < 100) {
+    return alert("Saque mínimo: 100 $DYNO");
+  }
 
-  const taxa = total * 0.05;
-  const valorLiquido = total - taxa;
+  const taxa = saldoTotal * 0.05;
+  const valorFinal = saldoTotal - taxa;
 
   const { error: insertError } = await _supabase
     .from("saques_pendentes")
     .insert([
       {
         carteira_usuario: carteira,
-        valor_solicitado: total,
+        valor_solicitado: saldoTotal,
         taxa: taxa,
-        valor_liquido: valorLiquido,
+        valor_final: valorFinal,
         status: "pendente"
       }
     ]);
@@ -428,10 +397,12 @@ async function solicitarSaque() {
     return alert("Erro ao processar saque.");
   }
 
-  // zera tudo
   const { error: updateError } = await _supabase
     .from("usuarios")
-    .update({ saldo_minerado: 0, ref_earnings: 0 })
+    .update({
+      saldo_minerado: 0,
+      ref_earnings: 0
+    })
     .eq("carteira", carteira);
 
   if (updateError) {
@@ -444,17 +415,68 @@ async function solicitarSaque() {
 
   alert(
     `✅ Saque solicitado!\n\n` +
-    `📌 Total solicitado: ${total.toFixed(2)} DYNO\n` +
-    `⛏️ Minerado: ${saldoMinerado.toFixed(2)} DYNO\n` +
-    `👥 Indicação: ${saldoRef.toFixed(2)} DYNO\n\n` +
+    `💰 Total: ${saldoTotal.toFixed(2)} DYNO\n` +
     `💸 Taxa (5%): ${taxa.toFixed(2)} DYNO\n` +
-    `✅ Valor líquido: ${valorLiquido.toFixed(2)} DYNO\n\n` +
-    `⏳ Prazo: 24h a 72h`
+    `🏦 Você recebe: ${valorFinal.toFixed(2)} DYNO\n\n` +
+    `⏳ Prazo: 24 a 72 horas`
   );
 }
 
 // ===============================
-// 15. COMPRAR GPU
+// 14. PAGAR COMISSÃO DE INDICAÇÃO (10%)
+// ===============================
+async function pagarComissaoIndicacao(valorCompra, comprador) {
+  try {
+    const { data: compradorData, error } = await _supabase
+      .from("usuarios")
+      .select("indicado_por")
+      .eq("carteira", comprador)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Erro ao buscar indicado_por:", error);
+      return;
+    }
+
+    const patrocinador = compradorData?.indicado_por;
+    if (!patrocinador) return;
+
+    const comissao = valorCompra * 0.10;
+
+    // atualiza ref_earnings do patrocinador
+    const { data: sponsorData } = await _supabase
+      .from("usuarios")
+      .select("ref_earnings")
+      .eq("carteira", patrocinador)
+      .maybeSingle();
+
+    const atual = Number(sponsorData?.ref_earnings || 0);
+    const novo = atual + comissao;
+
+    await _supabase
+      .from("usuarios")
+      .update({ ref_earnings: novo })
+      .eq("carteira", patrocinador);
+
+    // salva histórico
+    await _supabase
+      .from("ref_comissoes")
+      .insert([
+        {
+          patrocinador: patrocinador,
+          indicado: comprador,
+          valor_compra: valorCompra,
+          comissao: comissao
+        }
+      ]);
+
+  } catch (err) {
+    console.error("Erro pagarComissaoIndicacao:", err);
+  }
+}
+
+// ===============================
+// 15. COMPRAR GPU (SALVA NO SUPABASE + PAGA INDICAÇÃO)
 // ===============================
 async function buyGPU(i) {
   if (!userAccount) return alert("Conecte a carteira!");
@@ -493,14 +515,15 @@ async function buyGPU(i) {
       return alert("Erro ao salvar compra no servidor.");
     }
 
-    await pagarComissaoIndicador(gpus[i].custo);
+    // paga comissão de indicação
+    await pagarComissaoIndicacao(gpus[i].custo, carteira);
 
     await carregarDynosComprados();
+    await atualizarDadosUsuario();
 
     renderShop();
     updateHashrate();
     await atualizarSaldo();
-    await atualizarDadosUsuario();
 
     alert("✅ Compra concluída!");
 
@@ -511,7 +534,7 @@ async function buyGPU(i) {
 }
 
 // ===============================
-// 16. SHOP
+// 16. RENDER SHOP
 // ===============================
 function renderShop() {
   const grid = document.getElementById("gpu-grid");
@@ -668,6 +691,8 @@ window.onload = async () => {
   renderShop();
   updateHashrate();
 };
+
+
 
 
 
