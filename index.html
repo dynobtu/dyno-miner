@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -30,7 +31,7 @@
       </div>
 
       <div class="wallet-area">
-        <!-- BOTÃO OBTER DYNO (SÓ AQUI EM CIMA) -->
+        <!-- BOTÃO OBTER DYNO -->
         <a class="btn btn-obter" target="_blank"
           href="https://pancakeswap.finance/swap?chain=bsc&inputCurrency=0x55d398326f99059fF775485246999027B3197955&outputCurrency=0xDa9756415A5D92027d994Fd33aC1823bA2fdc9ED">
           OBTER DYNO
@@ -54,9 +55,12 @@
     </div>
 
     <div class="info-card">
-      <h4>LUCRO INDICAÇÃO (5%)</h4>
+      <h4>LUCRO INDICAÇÃO (10%)</h4>
       <p><span id="refEarnings">0.00</span> $DYNO</p>
       <p class="small-info">INDICADOS: <span id="refCount">0</span></p>
+      <p class="small-info" style="opacity:0.8;">
+        Comissão só é gerada quando o indicado compra.
+      </p>
     </div>
 
     <div class="info-card">
@@ -94,7 +98,7 @@
         👥 COPIAR LINK DE INDICAÇÃO
       </button>
 
-      <!-- INPUT LINK EMBAIXO DO BOTÃO -->
+      <!-- INPUT LINK -->
       <input id="refLink" class="ref-input" value="Conecte a carteira..." readonly />
     </aside>
 
@@ -109,44 +113,68 @@
   <!-- RODAPÉ -->
   <footer class="footer">
     <div class="footer-box">
-      <h3>TERMOS E CONDIÇÕES</h3>
 
-      <p>⚠️ <b>IMPORTANTE:</b></p>
+      <h3>TERMOS, CONDIÇÕES E INFORMAÇÕES IMPORTANTES</h3>
 
-      <p>- Cada Dyno possui um ciclo de mineração de <b>10 dias</b>.</p>
+      <div class="footer-columns">
 
-      <p>- Para minerar, é obrigatório <b>ativar a mineração diariamente</b>.
-        Cada ativação dura <b>24 horas</b>. Se não ativar, <b>não haverá ganhos</b>.
-      </p>
+        <!-- COLUNA 1 -->
+        <div class="footer-col">
+          <h4>⛏️ MINERAÇÃO</h4>
+          <p>- A mineração funciona em ciclos de <b>10 dias</b>.</p>
+          <p>- Para minerar é obrigatório ativar <b>todos os dias</b>.</p>
+          <p>- Cada ativação dura <b>24 horas</b>.</p>
+          <p>- Caso não ative, <b>não será gerado lucro</b> no período.</p>
+        </div>
 
-      <p>- O jogador pode comprar apenas <b>1 Dyno por raridade</b> durante o ciclo ativo.
-        Após os <b>10 dias</b>, será possível comprar novamente.
-      </p>
+        <!-- COLUNA 2 -->
+        <div class="footer-col">
+          <h4>🛒 COMPRAS / MERCADO</h4>
+          <p>- Cada jogador pode comprar apenas <b>1 Dyno por raridade</b>.</p>
+          <p>- Após finalizar o ciclo de <b>10 dias</b>, é possível comprar novamente.</p>
+          <p>- Quanto maior a raridade, maior o <b>hashrate</b> e retorno.</p>
+          <p>- Todas as compras são registradas e vinculadas à carteira conectada.</p>
+        </div>
 
-      <p>- O saque mínimo é de <b>100 DYNOCOIN</b>.</p>
+        <!-- COLUNA 3 -->
+        <div class="footer-col">
+          <h4>🏧 SAQUES / INDICAÇÃO</h4>
+          <p>- Saque mínimo: <b>100 DYNO</b>.</p>
+          <p>- Taxa de saque: <b>5%</b> aplicada automaticamente.</p>
+          <p>- O saque pode levar de <b>24 a 72 horas</b> para processamento.</p>
+          <p>- Indicação paga <b>10%</b> somente quando o indicado realizar compras.</p>
+        </div>
 
-      <p>- Todos os saques possuem uma taxa administrativa de <b>5%</b>.</p>
-
-      <p>- O processamento de saque pode levar de <b>24 a 72 horas</b>.
-        Após solicitar, aguarde o prazo de confirmação.
-      </p>
-
-      <p>- O mercado de criptomoedas é altamente volátil e instável.
-        Este sistema <b>não garante lucros</b> ou retornos futuros.
-      </p>
-
-      <p>- Permitido apenas para maiores de <b>18 anos</b>.</p>
-
-      <div class="footer-warning">
-        <p>🚀 <b>DYNO-CRYPTO V2.0 PRO</b></p>
-        <p>POWERED BY BSC NETWORK</p>
-        <p>© Todos os direitos reservados.</p>
       </div>
+
+      <div class="footer-legal">
+        <p>
+          ⚠️ <b>AVISO:</b> O mercado de criptomoedas é altamente instável e envolve riscos.
+          Este projeto não garante lucros e não se responsabiliza por perdas financeiras.
+        </p>
+
+        <p>
+          🔞 Este sistema é destinado apenas para maiores de <b>18 anos</b>.
+        </p>
+
+        <p>
+          © DYNO-CRYPTO V2.0 PRO — Todos os direitos reservados.
+        </p>
+
+        <p style="opacity:0.8;">
+          POWERED BY BSC NETWORK
+        </p>
+      </div>
+
     </div>
   </footer>
 
   <script src="script.js"></script>
+
 </body>
+
 </html>
+
+
 
 
