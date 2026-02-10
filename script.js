@@ -28,6 +28,7 @@ const gpus = [
 let userAccount = null;
 let purchasedDynos = {};
 let miningLoop = null;
+let isConnecting = false;
 
 // ===============================
 // 3. FUNÇÕES AUXILIARES
@@ -123,10 +124,8 @@ async function registrarIndicacaoSeExistir() {
     .eq("carteira", carteira)
     .maybeSingle();
 
-  // se já tem indicado_por, não mexe
   if (userData?.indicado_por) return;
 
-  // salva quem indicou
   const { error: updateError } = await _supabase
     .from("usuarios")
     .update({ indicado_por: ref.toLowerCase() })
@@ -137,7 +136,6 @@ async function registrarIndicacaoSeExistir() {
     return;
   }
 
-  // soma +1 no contador do patrocinador
   const { data: patrocinador } = await _supabase
     .from("usuarios")
     .select("ref_count")
@@ -202,7 +200,11 @@ async function getOrCreateUser() {
 // 8. CONECTAR WALLET
 // ===============================
 async function connectWallet() {
+  if (isConnecting) return;
+  isConnecting = true;
+
   if (!window.ethereum) {
+    isConnecting = false;
     return alert("Metamask não detectada!");
   }
 
@@ -218,6 +220,7 @@ async function connectWallet() {
 
     if (network.chainId !== 56) {
       alert("⚠️ Conecte na rede Binance Smart Chain (BSC)!");
+      isConnecting = false;
       return;
     }
 
@@ -241,13 +244,19 @@ async function connectWallet() {
     console.error(e);
     alert("Erro ao conectar carteira.");
   }
+
+  isConnecting = false;
 }
 
 if (window.ethereum) {
   window.ethereum.on("accountsChanged", async (accounts) => {
     if (accounts.length > 0) {
       userAccount = accounts[0];
-      await connectWallet();
+      await atualizarSaldo();
+      await atualizarDadosUsuario();
+      await carregarDynosComprados();
+      renderShop();
+      updateHashrate();
     }
   });
 
@@ -647,6 +656,12 @@ async function calcularMineracaoOffline() {
 
   await carregarDynosComprados();
 
+  const {_toggle = await _supabase
+    .from("usuarios")
+    .select("*")
+    .eq("carteira", carteira)
+    .single();
+
   const { data, error } = await _supabase
     .from("usuarios")
     .select("*")
@@ -735,6 +750,7 @@ window.onload = async () => {
   renderShop();
   updateHashrate();
 };
+
 
 
 
