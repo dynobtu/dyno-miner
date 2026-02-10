@@ -1,476 +1,356 @@
-/* ===============================
-   RESET / BASE
-================================ */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: "Courier New", monospace;
 }
 
 body {
   background: black;
-  color: #00ff66;
-  font-family: "Courier New", monospace;
+  color: #00ff00;
   overflow-x: hidden;
 }
 
-/* ===============================
-   HEADER MATRIX
-================================ */
-.matrix-header {
-  position: relative;
-  height: 160px;
-  border-bottom: 2px solid #00ff66;
-  overflow: hidden;
-}
-
-#matrixCanvas {
-  position: absolute;
+#matrix {
+  position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 160px;
-  z-index: 1;
-  opacity: 0.35;
+  z-index: -1;
 }
 
-/* conteúdo do header por cima */
-.header-content {
-  position: relative;
-  z-index: 2;
-  height: 160px;
+/* HEADER */
+.header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 40px;
-  background: rgba(0, 0, 0, 0.55);
+  padding: 25px 40px;
 }
 
-.logo-area {
+.header-left h1 {
+  font-size: 28px;
+  color: #00ff00;
+  text-shadow: 0px 0px 10px #00ff00;
+}
+
+.header-left p {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.header-right {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.logo {
-  font-size: 1.5rem;
-  font-weight: bold;
-  letter-spacing: 1px;
-}
-
-.sublogo {
-  font-size: 0.85rem;
-  opacity: 0.7;
-}
-
-.wallet-area {
-  display: flex;
+  gap: 15px;
   align-items: center;
-  gap: 12px;
 }
 
 .wallet-box {
-  border: 1px solid #00ff66;
-  padding: 10px 14px;
-  min-width: 150px;
+  border: 1px solid #00ff00;
+  padding: 10px 15px;
+  min-width: 140px;
   text-align: center;
-  font-size: 0.9rem;
-  background: rgba(0, 0, 0, 0.6);
+  font-size: 14px;
+  box-shadow: 0px 0px 10px rgba(0, 255, 0, 0.3);
 }
 
-/* ===============================
-   BOTÕES
-================================ */
+/* LINE */
+.line {
+  border: 1px solid #00ff00;
+  margin: 0 40px;
+  opacity: 0.6;
+}
+
+/* BUTTON */
 .btn {
-  padding: 10px 14px;
-  border: 1px solid #00ff66;
   background: transparent;
-  color: #00ff66;
+  border: 1px solid #00ff00;
+  color: #00ff00;
+  padding: 10px 18px;
   cursor: pointer;
-  text-decoration: none;
-  font-weight: bold;
-  text-transform: uppercase;
+  font-size: 14px;
   transition: 0.2s;
-  font-size: 0.85rem;
+  text-shadow: 0px 0px 8px #00ff00;
 }
 
 .btn:hover {
-  background: #00ff66;
-  color: black;
+  background: rgba(0, 255, 0, 0.1);
+  box-shadow: 0px 0px 10px rgba(0, 255, 0, 0.4);
 }
 
-.btn-obter {
-  border: 1px solid #00ff66;
-  background: rgba(0, 255, 102, 0.1);
-}
-
-.btn-green {
-  width: 100%;
-  padding: 12px;
-  margin-top: 12px;
-  border: 1px solid #00ff66;
-  background: rgba(0, 255, 102, 0.08);
-  color: #00ff66;
-  cursor: pointer;
-  font-weight: bold;
-  text-transform: uppercase;
-  transition: 0.2s;
-  font-size: 0.85rem;
-}
-
-.btn-green:hover {
-  background: #00ff66;
-  color: black;
-}
-
-button:disabled {
+.btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-/* ===============================
-   INFO CARDS (TOPO)
-================================ */
-.info-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 15px;
-  padding: 25px 30px;
-  max-width: 1250px;
-  margin: 0 auto;
-}
-
-.info-card {
-  border: 1px solid #00ff66;
-  padding: 15px;
-  text-align: center;
-  background: rgba(0, 255, 102, 0.05);
-  box-shadow: 0 0 8px rgba(0, 255, 102, 0.08);
-}
-
-.info-card h4 {
-  font-size: 0.85rem;
-  opacity: 0.85;
-  margin-bottom: 10px;
-}
-
-.info-card p {
-  font-size: 1.1rem;
-  font-weight: bold;
-}
-
-.small-info {
-  margin-top: 8px;
-  font-size: 0.85rem;
-  opacity: 0.7;
-}
-
-/* ===============================
-   GRID PRINCIPAL
-================================ */
-.main-grid {
-  max-width: 1250px;
-  margin: 0 auto;
-  padding: 15px 30px 40px 30px;
-  display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: 25px;
-}
-
-/* ===============================
-   PAINEL ESQUERDO
-================================ */
-.panel {
-  border: 1px solid #00ff66;
-  padding: 18px;
-  background: rgba(0, 0, 0, 0.75);
-  box-shadow: 0 0 12px rgba(0, 255, 102, 0.08);
-  height: fit-content;
-}
-
-.panel h3 {
-  font-size: 0.95rem;
-  margin-bottom: 15px;
-  border-bottom: 1px solid rgba(0, 255, 102, 0.3);
-  padding-bottom: 10px;
-  text-transform: uppercase;
-}
-
-.timer {
-  margin-top: 15px;
-  font-size: 0.85rem;
-  opacity: 0.85;
-}
-
-/* input link */
-.ref-input {
+.btn.full {
   width: 100%;
-  padding: 10px;
-  margin-top: 12px;
-  border: 1px solid #00ff66;
-  background: black;
-  color: #00ff66;
-  font-size: 0.8rem;
-}
-
-/* ===============================
-   SHOP
-================================ */
-.shop {
-  border: 1px solid #00ff66;
-  padding: 18px;
-  background: rgba(0, 0, 0, 0.75);
-  box-shadow: 0 0 12px rgba(0, 255, 102, 0.08);
-}
-
-.shop h2 {
-  font-size: 1.1rem;
-  margin-bottom: 15px;
-  border-bottom: 1px solid rgba(0, 255, 102, 0.3);
-  padding-bottom: 10px;
-  text-transform: uppercase;
-}
-
-/* ===============================
-   GPU GRID
-================================ */
-.gpu-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 18px;
-}
-
-.gpu-item {
-  border: 1px solid #00ff66;
-  padding: 14px;
-  text-align: center;
-  position: relative;
-  background: rgba(0, 255, 102, 0.03);
-  transition: 0.2s;
-}
-
-.gpu-item:hover {
-  transform: scale(1.02);
-  box-shadow: 0 0 15px rgba(0, 255, 102, 0.15);
-}
-
-.gpu-item img {
-  width: 100%;
-  max-width: 160px;
-  margin: 0 auto 12px auto;
-  display: block;
-}
-
-.gpu-item h4 {
-  margin-bottom: 8px;
-  font-size: 0.95rem;
-}
-
-.gpu-item p {
-  font-size: 0.8rem;
-  opacity: 0.8;
-  margin-bottom: 6px;
-}
-
-.gpu-item button {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #00ff66;
-  background: rgba(0, 255, 102, 0.07);
-  color: #00ff66;
-  cursor: pointer;
-  font-weight: bold;
-  transition: 0.2s;
   margin-top: 10px;
 }
 
+/* TOP INFO */
+.top-info {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 25px;
+  padding: 25px 40px;
+}
+
+.box {
+  border: 1px solid #00ff00;
+  padding: 20px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.7);
+  box-shadow: 0px 0px 15px rgba(0, 255, 0, 0.15);
+}
+
+.box h3 {
+  font-size: 14px;
+  margin-bottom: 10px;
+  opacity: 0.9;
+}
+
+.box p {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.small {
+  font-size: 13px;
+  opacity: 0.8;
+  margin-top: 5px;
+}
+
+/* MAIN */
+.main {
+  display: grid;
+  grid-template-columns: 330px 1fr;
+  gap: 25px;
+  padding: 20px 40px;
+}
+
+/* LEFT PANEL */
+.left-panel {
+  border: 1px solid #00ff00;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.7);
+  box-shadow: 0px 0px 15px rgba(0, 255, 0, 0.15);
+}
+
+.left-panel h2 {
+  font-size: 15px;
+  margin-bottom: 10px;
+}
+
+.panel-line {
+  border: 1px solid #00ff00;
+  opacity: 0.4;
+  margin: 10px 0;
+}
+
+.timer {
+  font-size: 13px;
+  opacity: 0.8;
+  margin-top: 10px;
+}
+
+.input-ref {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  background: black;
+  border: 1px solid #00ff00;
+  color: #00ff00;
+  font-size: 13px;
+}
+
+/* SHOP */
+.shop-panel {
+  border: 1px solid #00ff00;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.7);
+  box-shadow: 0px 0px 15px rgba(0, 255, 0, 0.15);
+}
+
+.shop-panel h2 {
+  font-size: 15px;
+  margin-bottom: 10px;
+}
+
+/* GPU GRID */
+.gpu-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 25px;
+  margin-top: 20px;
+}
+
+.gpu-item {
+  border: 1px solid #00ff00;
+  padding: 15px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.75);
+  position: relative;
+  box-shadow: 0px 0px 15px rgba(0, 255, 0, 0.15);
+}
+
+.gpu-item img {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  margin-bottom: 10px;
+  border: 1px solid rgba(0, 255, 0, 0.4);
+  box-shadow: 0px 0px 10px rgba(0, 255, 0, 0.3);
+}
+
+.gpu-item h4 {
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.gpu-item p {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.gpu-item button {
+  margin-top: 12px;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #00ff00;
+  background: transparent;
+  color: #00ff00;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
 .gpu-item button:hover {
-  background: #00ff66;
-  color: black;
+  background: rgba(0, 255, 0, 0.1);
 }
 
 .gpu-item button:disabled {
-  opacity: 0.35;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
-/* badge lucro */
 .badge-profit {
   position: absolute;
   top: 10px;
   right: 10px;
-  background: #00ff66;
-  color: black;
-  padding: 3px 8px;
-  font-size: 0.75rem;
-  font-weight: bold;
-  border-radius: 4px;
+  font-size: 11px;
+  border: 1px solid #00ff00;
+  padding: 4px 8px;
+  background: rgba(0, 255, 0, 0.1);
 }
 
-/* ===============================
-   FOOTER HACKER 4 COLUNAS
-================================ */
-.footer {
-  margin-top: 60px;
-  padding: 35px 20px;
-  border-top: 1px solid rgba(0, 255, 102, 0.25);
-  background: rgba(0, 0, 0, 0.95);
+/* INFO SECTION */
+.info-section {
+  margin-top: 40px;
+  padding: 30px 40px;
+  border-top: 1px solid rgba(0, 255, 0, 0.3);
 }
 
-.footer-box {
-  max-width: 1250px;
-  margin: 0 auto;
-  border: 1px solid #00ff66;
-  padding: 25px;
-  background: rgba(0, 255, 102, 0.03);
-  box-shadow: 0 0 18px rgba(0, 255, 102, 0.12);
-  position: relative;
-  overflow: hidden;
+.info-section h2 {
+  font-size: 15px;
+  margin-bottom: 10px;
 }
 
-/* efeito hacker/CRT */
-.footer-box::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -50%;
-  width: 200%;
-  height: 100%;
-  background: repeating-linear-gradient(
-    rgba(0, 255, 102, 0.02),
-    rgba(0, 255, 102, 0.02) 2px,
-    rgba(0, 0, 0, 0.03) 4px,
-    rgba(0, 0, 0, 0.03) 6px
-  );
-  opacity: 0.4;
-  pointer-events: none;
-  animation: scanMove 6s linear infinite;
-}
-
-@keyframes scanMove {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(25%); }
-}
-
-.footer-box h3 {
-  font-size: 1.05rem;
-  margin-bottom: 18px;
-  text-transform: uppercase;
-  border-bottom: 1px solid rgba(0, 255, 102, 0.3);
-  padding-bottom: 10px;
-  position: relative;
-  z-index: 2;
-}
-
-.footer-columns {
+.info-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 18px;
-  position: relative;
-  z-index: 2;
+  gap: 20px;
+  margin-top: 20px;
 }
 
-.footer-col {
-  border: 1px solid rgba(0, 255, 102, 0.35);
+.info-box {
+  border: 1px solid #00ff00;
   padding: 15px;
-  background: rgba(0, 0, 0, 0.65);
-  box-shadow: 0 0 12px rgba(0, 255, 102, 0.08);
+  background: rgba(0, 0, 0, 0.7);
+  box-shadow: 0px 0px 15px rgba(0, 255, 0, 0.15);
 }
 
-.footer-col h4 {
-  font-size: 0.95rem;
-  margin-bottom: 12px;
-  text-transform: uppercase;
-  border-bottom: 1px solid rgba(0, 255, 102, 0.2);
-  padding-bottom: 8px;
+.info-box h3 {
+  font-size: 14px;
+  margin-bottom: 10px;
 }
 
-.footer-col p {
-  font-size: 0.82rem;
-  opacity: 0.9;
-  margin-bottom: 8px;
+.info-box ul {
+  list-style: none;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.info-box ul li {
+  margin-bottom: 6px;
+}
+
+.info-box p {
+  font-size: 12px;
+  opacity: 0.85;
   line-height: 1.5;
 }
 
-.footer-warning {
-  margin-top: 25px;
-  padding-top: 15px;
-  border-top: 1px solid rgba(0, 255, 102, 0.3);
+/* FOOTER */
+.footer {
   text-align: center;
+  padding: 20px 0;
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.hacker-footer {
+  margin-top: 12px;
+  font-size: 20px;
   font-weight: bold;
-  opacity: 0.85;
-  position: relative;
-  z-index: 2;
+  color: #00ff00;
+  text-shadow: 0px 0px 10px #00ff00;
+  letter-spacing: 6px;
+  animation: blink 1.2s infinite;
 }
 
-.footer-warning p {
-  margin-bottom: 6px;
-  letter-spacing: 1px;
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.2; }
+  100% { opacity: 1; }
 }
 
-/* ===============================
-   RESPONSIVO
-================================ */
-@media (max-width: 1100px) {
-  .info-row {
+/* RESPONSIVO */
+@media (max-width: 1200px) {
+  .gpu-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .main-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .panel {
-    order: 1;
-  }
-
-  .shop {
-    order: 2;
-  }
-
-  .header-content {
-    flex-direction: column;
-    gap: 15px;
-    padding: 20px;
-    justify-content: center;
-  }
-
-  .wallet-area {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .wallet-box {
-    min-width: 200px;
-  }
-
-  .footer-columns {
+  .info-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .top-info {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .main {
+    grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 600px) {
-  .info-row {
-    grid-template-columns: 1fr;
-  }
-
+@media (max-width: 650px) {
   .gpu-grid {
     grid-template-columns: 1fr;
   }
 
-  .logo {
-    font-size: 1.2rem;
-    text-align: center;
-  }
-
-  .sublogo {
-    text-align: center;
-  }
-
-  .footer-columns {
+  .info-grid {
     grid-template-columns: 1fr;
   }
+
+  .top-info {
+    grid-template-columns: 1fr;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
 }
+
 
 
 
