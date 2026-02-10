@@ -1,82 +1,83 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DYNO-CRYPTO V2.0 PRO</title>
 
   <link rel="stylesheet" href="style.css" />
 
-  <!-- Ethers + Supabase -->
+  <!-- ethers -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+
+  <!-- supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
 
-  <!-- MATRIX BACKGROUND -->
-  <canvas id="matrix"></canvas>
+  <!-- MATRIX SOMENTE NO TOPO -->
+  <div class="matrix-header">
+    <canvas id="matrixCanvas"></canvas>
+  </div>
 
   <!-- HEADER -->
-  <header class="header">
-    <div class="header-left">
-      <h1>DYNO-CRYPTO V2.0 PRO</h1>
-      <p>MINERAÇÃO ONLINE / OFFLINE (24H)</p>
-    </div>
+  <header class="topbar">
+    <div class="header-content">
 
-    <div class="header-right">
-      <button class="btn" onclick="window.open('https://pancakeswap.finance/', '_blank')">
-        OBTER DYNO
-      </button>
-
-      <button class="btn" onclick="connectWallet()">
-        CONECTAR
-      </button>
-
-      <div class="wallet-box">
-        <span id="walletDisplay">---</span>
+      <div class="logo-area">
+        <div class="logo">DYNO-CRYPTO V2.0 PRO</div>
+        <div class="sublogo">MINERAÇÃO ONLINE / OFFLINE (24H)</div>
       </div>
+
+      <div class="wallet-area">
+        <a class="btn btn-obter" id="btnObterDyno" target="_blank"
+          href="https://pancakeswap.finance/swap?chain=bsc&inputCurrency=0x55d398326f99059fF775485246999027B3197955&outputCurrency=0xDa9756415A5D92027d994Fd33aC1823bA2fdc9ED">
+          OBTER DYNO
+        </a>
+
+        <button class="btn" onclick="connectWallet()">CONECTAR</button>
+
+        <div class="wallet-box">
+          <span id="walletDisplay">---</span>
+        </div>
+      </div>
+
     </div>
   </header>
 
-  <hr class="line"/>
-
-  <!-- TOP INFO -->
-  <section class="top-info">
-
-    <div class="box">
-      <h3>SALDO MINERADO</h3>
+  <!-- INFO CARDS -->
+  <section class="info-row">
+    <div class="info-card">
+      <h4>SALDO MINERADO</h4>
       <p><span id="visualGain">0.000000</span> $DYNO</p>
     </div>
 
-    <div class="box">
-      <h3>LUCRO INDICAÇÃO (10%)</h3>
+    <div class="info-card">
+      <h4>LUCRO INDICAÇÃO (10%)</h4>
       <p><span id="refEarnings">0.00</span> $DYNO</p>
-      <p class="small">INDICADOS: <span id="refCount">0</span></p>
+      <p class="small-info">INDICADOS: <span id="refCount">0</span></p>
     </div>
 
-    <div class="box">
-      <h3>PODER DE HASH</h3>
+    <div class="info-card">
+      <h4>PODER DE HASH</h4>
       <p><span id="hashrate">0</span> H/s</p>
     </div>
 
-    <div class="box">
-      <h3>SALDO EM CARTEIRA</h3>
+    <div class="info-card">
+      <h4>SALDO EM CARTEIRA</h4>
       <p><span id="walletBalance">0.00</span> $DYNO</p>
     </div>
-
   </section>
 
-  <!-- MAIN CONTENT -->
-  <main class="main">
+  <!-- GRID PRINCIPAL -->
+  <main class="main-grid">
 
-    <!-- LEFT PANEL -->
-    <section class="left-panel">
+    <!-- PAINEL ESQUERDO -->
+    <aside class="panel">
+      <h3>TERMINAL DE OPERAÇÃO</h3>
 
-      <h2>TERMINAL DE OPERAÇÃO</h2>
-      <hr class="panel-line">
-
-      <button class="btn full" id="btnActivate" onclick="activateMining()">
+      <button id="btnActivate" class="btn-green" onclick="activateMining()">
         ⚡ ATIVAR MINERAÇÃO (24H)
       </button>
 
@@ -84,143 +85,89 @@
         REATIVAR EM: <span id="activationTimer">00:00:00</span>
       </p>
 
-      <button class="btn full" onclick="solicitarSaque()">
+      <button class="btn-green" onclick="solicitarSaque()">
         🏧 SOLICITAR SAQUE
       </button>
 
-      <button class="btn full" onclick="resgatarComissaoParaSaldo()">
+      <button class="btn-green" onclick="resgatarComissaoParaSaldo()">
         💰 RESGATAR COMISSÃO
       </button>
 
-      <button class="btn full" onclick="copyRefLink()">
+      <button class="btn-green" onclick="copyRefLink()">
         👥 COPIAR LINK DE INDICAÇÃO
       </button>
 
-      <input type="text" id="refLink" class="input-ref" value="Conecte a carteira..." readonly />
+      <input id="refLink" class="ref-input" value="Conecte a carteira..." readonly />
+    </aside>
 
-    </section>
-
-    <!-- SHOP PANEL -->
-    <section class="shop-panel">
+    <!-- SHOP -->
+    <section class="shop">
       <h2>MERCADO DE HARDWARE</h2>
-      <hr class="panel-line">
-
-      <div id="gpu-grid" class="gpu-grid">
-        <!-- renderShop() vai preencher -->
-      </div>
-
+      <div id="gpu-grid" class="gpu-grid"></div>
     </section>
 
   </main>
 
-  <!-- FOOTER INFO -->
-  <section class="info-section">
-    <h2>INFORMAÇÕES IMPORTANTES</h2>
-    <hr class="panel-line">
+  <!-- RODAPÉ -->
+  <footer class="footer">
+    <div class="footer-box">
+      <h3>INFORMAÇÕES IMPORTANTES</h3>
 
-    <div class="info-grid">
+      <div class="footer-columns">
 
-      <div class="info-box">
-        <h3>⛏ MINERAÇÃO</h3>
-        <ul>
-          <li>A mineração dura 10 dias.</li>
-          <li>Para minerar é obrigatório ativar a mineração todo dia.</li>
-          <li>Cada ativação dura 24 horas.</li>
-          <li>Se não ativar, não minera.</li>
-        </ul>
+        <div class="footer-col">
+          <h4>⛏️ Mineração</h4>
+          <p>- A mineração dura <b>10 dias</b>.</p>
+          <p>- Para minerar é obrigatório ativar a mineração <b>todo dia</b>.</p>
+          <p>- Cada ativação dura <b>24 horas</b>.</p>
+          <p>- Se não ativar, <b>não minera</b>.</p>
+        </div>
+
+        <div class="footer-col">
+          <h4>🛒 Dynos</h4>
+          <p>- Só ganha se tiver Dyno comprado.</p>
+          <p>- Só pode comprar <b>1 de cada raridade</b>.</p>
+          <p>- Após 10 dias, pode comprar novamente.</p>
+          <p>- Indicação paga <b>10%</b> somente quando o indicado comprar.</p>
+        </div>
+
+        <div class="footer-col">
+          <h4>🏧 Saques</h4>
+          <p>- Saque mínimo: <b>100 DYNO</b>.</p>
+          <p>- Taxa de saque: <b>5%</b>.</p>
+          <p>- Saques podem levar de <b>24h a 72h</b>.</p>
+          <p>- O mercado cripto é instável e não garante lucros.</p>
+        </div>
+
+        <div class="footer-col">
+          <h4>📜 Termos</h4>
+          <p>
+            Ao utilizar este sistema você concorda que DYNO-CRYPTO é um projeto experimental,
+            sem garantia de lucro.
+          </p>
+          <p>
+            A mineração depende de ativação diária e compras de Dynos.
+            Saques são processados manualmente e podem demorar até 72 horas.
+          </p>
+          <p>
+            Proibido para menores de 18 anos. Use por sua conta e risco.
+          </p>
+        </div>
+
       </div>
 
-      <div class="info-box">
-        <h3>🛒 DYNOS</h3>
-        <ul>
-          <li>Só ganha se tiver Dyno comprado.</li>
-          <li>Só pode comprar 1 de cada raridade.</li>
-          <li>Após 10 dias, pode comprar novamente.</li>
-          <li>Indicação paga 10% somente quando o indicado comprar.</li>
-        </ul>
+      <div class="footer-warning">
+        <p>💻 DYNO-CRYPTO V2.0 PRO - SYSTEM ONLINE</p>
+        <p>POWERED BY BSC NETWORK</p>
       </div>
-
-      <div class="info-box">
-        <h3>🏧 SAQUES</h3>
-        <ul>
-          <li>Saque mínimo: 100 DYNO.</li>
-          <li>Taxa de saque: 5%.</li>
-          <li>Saques podem levar de 24h a 72h.</li>
-          <li>Mercado crypto é instável e não garante lucros.</li>
-        </ul>
-      </div>
-
-      <div class="info-box">
-        <h3>📜 TERMOS</h3>
-        <p>
-          Ao utilizar este sistema você concorda que DYNO-CRYPTO é um projeto experimental,
-          sem garantia de lucro.
-          <br><br>
-          A mineração depende de ativação diária e compras de Dynos.
-          Saques são processados manualmente e podem demorar até 72 horas.
-          <br><br>
-          Proibido para menores de 18 anos. Use por sua conta e risco.
-        </p>
-      </div>
-
     </div>
+  </footer>
 
-    <hr class="panel-line">
-
-    <div class="footer">
-      <p>💻 DYNO-CRYPTO V2.0 PRO - SYSTEM ONLINE</p>
-      <p>POWERED BY BSC NETWORK</p>
-      <p class="hacker-footer">HACKER</p>
-    </div>
-
-  </section>
-
-  <!-- MATRIX SCRIPT -->
-  <script>
-    const canvas = document.getElementById("matrix");
-    const ctx = canvas.getContext("2d");
-
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    const letters = "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$".split("");
-    const fontSize = 16;
-    const columns = canvas.width / fontSize;
-
-    const drops = [];
-    for (let x = 0; x < columns; x++) drops[x] = 1;
-
-    function drawMatrix() {
-      ctx.fillStyle = "rgba(0, 0, 0, 0.08)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      ctx.fillStyle = "#00ff00";
-      ctx.font = fontSize + "px monospace";
-
-      for (let i = 0; i < drops.length; i++) {
-        const text = letters[Math.floor(Math.random() * letters.length)];
-        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-          drops[i] = 0;
-        }
-        drops[i]++;
-      }
-    }
-
-    setInterval(drawMatrix, 35);
-
-    window.addEventListener("resize", () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    });
-  </script>
-
-  <!-- SEU SCRIPT PRINCIPAL -->
   <script src="script.js"></script>
 
 </body>
 </html>
+
 
 
 
