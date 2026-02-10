@@ -31,7 +31,55 @@ let miningLoop = null;
 let isConnecting = false;
 
 // ===============================
-// 3. FUNÇÕES AUXILIARES
+// 3. MATRIX $ NO HEADER
+// ===============================
+function startMatrixEffect() {
+  const canvas = document.getElementById("matrixCanvas");
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = 160;
+  }
+
+  resize();
+  window.addEventListener("resize", resize);
+
+  const letters = "$DYNO0123456789";
+  const fontSize = 16;
+  const columns = Math.floor(canvas.width / fontSize);
+
+  const drops = [];
+  for (let i = 0; i < columns; i++) {
+    drops[i] = Math.random() * canvas.height;
+  }
+
+  function draw() {
+    ctx.fillStyle = "rgba(0,0,0,0.15)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = "#00ff66";
+    ctx.font = fontSize + "px Courier New";
+
+    for (let i = 0; i < drops.length; i++) {
+      const text = letters.charAt(Math.floor(Math.random() * letters.length));
+      ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+      if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+        drops[i] = 0;
+      }
+
+      drops[i]++;
+    }
+  }
+
+  setInterval(draw, 40);
+}
+
+// ===============================
+// 4. FUNÇÕES AUXILIARES
 // ===============================
 function formatTime(ms) {
   const h = String(Math.floor(ms / 3600000)).padStart(2, "0");
@@ -55,7 +103,7 @@ function updateHashrate() {
 }
 
 // ===============================
-// 4. CALCULAR LUCRO REAL
+// 5. CALCULAR LUCRO REAL
 // ===============================
 function getLucroTotalPorDia() {
   let totalLucro = 0;
@@ -78,7 +126,7 @@ function getLucroPorSegundo() {
 }
 
 // ===============================
-// 5. BUSCAR COMPRAS DO SUPABASE
+// 6. BUSCAR COMPRAS DO SUPABASE
 // ===============================
 async function carregarDynosComprados() {
   if (!userAccount) return;
@@ -105,13 +153,12 @@ async function carregarDynosComprados() {
 }
 
 // ===============================
-// 6. SISTEMA DE INDICAÇÃO (REGISTRAR REF)
+// 7. SISTEMA DE INDICAÇÃO
 // ===============================
 async function registrarIndicacaoSeExistir() {
   if (!userAccount) return;
 
   const carteira = userAccount.toLowerCase();
-
   const urlParams = new URLSearchParams(window.location.search);
   const ref = urlParams.get("ref");
 
@@ -151,7 +198,7 @@ async function registrarIndicacaoSeExistir() {
 }
 
 // ===============================
-// 7. CRIAR OU BUSCAR USUÁRIO
+// 8. CRIAR OU BUSCAR USUÁRIO
 // ===============================
 async function getOrCreateUser() {
   if (!userAccount) return null;
@@ -197,7 +244,7 @@ async function getOrCreateUser() {
 }
 
 // ===============================
-// 8. CONECTAR WALLET
+// 9. CONECTAR WALLET
 // ===============================
 async function connectWallet() {
   if (isConnecting) return;
@@ -233,11 +280,12 @@ async function connectWallet() {
     await registrarIndicacaoSeExistir();
     await carregarDynosComprados();
 
+    renderShop();
+    updateHashrate();
+
     await atualizarSaldo();
     await atualizarDadosUsuario();
 
-    renderShop();
-    updateHashrate();
     iniciarMineracaoLoop();
 
   } catch (e) {
@@ -266,7 +314,7 @@ if (window.ethereum) {
 }
 
 // ===============================
-// 9. SALDO TOKEN
+// 10. SALDO TOKEN
 // ===============================
 async function atualizarSaldo() {
   if (!userAccount) return;
@@ -287,7 +335,7 @@ async function atualizarSaldo() {
 }
 
 // ===============================
-// 10. DADOS DO USUÁRIO
+// 11. DADOS DO USUÁRIO
 // ===============================
 async function atualizarDadosUsuario() {
   if (!userAccount) return;
@@ -313,7 +361,7 @@ async function atualizarDadosUsuario() {
 }
 
 // ===============================
-// 11. TIMER UI
+// 12. TIMER UI
 // ===============================
 function updateTimerUI(miningUntil) {
   const btn = document.getElementById("btnActivate");
@@ -321,10 +369,7 @@ function updateTimerUI(miningUntil) {
 
   if (!miningUntil) {
     if (timerEl) timerEl.innerText = "00:00:00";
-    if (btn) {
-      btn.disabled = false;
-      btn.style.opacity = "1";
-    }
+    if (btn) btn.disabled = false;
     return;
   }
 
@@ -333,20 +378,14 @@ function updateTimerUI(miningUntil) {
 
   if (agora >= fim) {
     if (timerEl) timerEl.innerText = "00:00:00";
-    if (btn) {
-      btn.disabled = false;
-      btn.style.opacity = "1";
-    }
+    if (btn) btn.disabled = false;
   } else {
-    if (btn) {
-      btn.disabled = true;
-      btn.style.opacity = "0.5";
-    }
+    if (btn) btn.disabled = true;
   }
 }
 
 // ===============================
-// 12. LINK AFILIADO
+// 13. LINK AFILIADO
 // ===============================
 function copyRefLink() {
   const input = document.getElementById("refLink");
@@ -360,7 +399,7 @@ function copyRefLink() {
 }
 
 // ===============================
-// 13. RESGATAR COMISSÃO PARA SALDO MINERADO
+// 14. RESGATAR COMISSÃO PARA SALDO MINERADO
 // ===============================
 async function resgatarComissaoParaSaldo() {
   if (!userAccount) return alert("Conecte a carteira!");
@@ -407,7 +446,7 @@ async function resgatarComissaoParaSaldo() {
 }
 
 // ===============================
-// 14. SAQUE (SOMA MINERAÇÃO + INDICAÇÃO + TAXA 5%)
+// 15. SAQUE
 // ===============================
 async function solicitarSaque() {
   if (!userAccount) return alert("Conecte a carteira!");
@@ -480,7 +519,7 @@ async function solicitarSaque() {
 }
 
 // ===============================
-// 15. PAGAR COMISSÃO DE INDICAÇÃO (10%)
+// 16. PAGAR COMISSÃO DE INDICAÇÃO (10%)
 // ===============================
 async function pagarComissaoIndicacao(valorCompra, comprador) {
   try {
@@ -531,7 +570,7 @@ async function pagarComissaoIndicacao(valorCompra, comprador) {
 }
 
 // ===============================
-// 16. COMPRAR GPU (SALVA NO SUPABASE + PAGA INDICAÇÃO)
+// 17. COMPRAR GPU
 // ===============================
 async function buyGPU(i) {
   if (!userAccount) return alert("Conecte a carteira!");
@@ -573,11 +612,11 @@ async function buyGPU(i) {
     await pagarComissaoIndicacao(gpus[i].custo, carteira);
 
     await carregarDynosComprados();
-    await atualizarDadosUsuario();
-
     renderShop();
     updateHashrate();
+
     await atualizarSaldo();
+    await atualizarDadosUsuario();
 
     alert("✅ Compra concluída!");
 
@@ -588,7 +627,7 @@ async function buyGPU(i) {
 }
 
 // ===============================
-// 17. RENDER SHOP
+// 18. RENDER SHOP
 // ===============================
 function renderShop() {
   const grid = document.getElementById("gpu-grid");
@@ -613,7 +652,7 @@ function renderShop() {
 }
 
 // ===============================
-// 18. MINERAÇÃO OFFLINE REAL
+// 19. MINERAÇÃO OFFLINE REAL
 // ===============================
 async function activateMining() {
   if (!userAccount) return alert("Conecte a carteira!");
@@ -655,12 +694,6 @@ async function calcularMineracaoOffline() {
   const carteira = userAccount.toLowerCase();
 
   await carregarDynosComprados();
-
-  const {_toggle = await _supabase
-    .from("usuarios")
-    .select("*")
-    .eq("carteira", carteira)
-    .single();
 
   const { data, error } = await _supabase
     .from("usuarios")
@@ -712,6 +745,8 @@ function iniciarMineracaoLoop() {
     await calcularMineracaoOffline();
     await atualizarDadosUsuario();
 
+    if (!userAccount) return;
+
     const { data } = await _supabase
       .from("usuarios")
       .select("mining_until")
@@ -731,25 +766,23 @@ function iniciarMineracaoLoop() {
 
     const btn = document.getElementById("btnActivate");
     if (btn) {
-      if (restante > 0) {
-        btn.disabled = true;
-        btn.style.opacity = "0.5";
-      } else {
-        btn.disabled = false;
-        btn.style.opacity = "1";
-      }
+      btn.disabled = restante > 0;
+      btn.style.opacity = restante > 0 ? "0.5" : "1";
     }
 
   }, 2000);
 }
 
 // ===============================
-// 19. INIT
+// 20. INIT
 // ===============================
 window.onload = async () => {
   renderShop();
   updateHashrate();
+  startMatrixEffect();
 };
+
+
 
 
 
