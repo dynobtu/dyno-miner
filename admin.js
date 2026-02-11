@@ -23,9 +23,58 @@ const ADMIN_WALLET = "0xe097661503B830ae10e91b01885a4b767A0e9107".toLowerCase();
 // ===============================
 // CHAVE SECRETA DO ADMIN (MUDE ISSO)
 // ===============================
-const ADMIN_KEY = "dyno123"; // MUDE PARA UMA SENHA MAIS FORTE!
+const ADMIN_KEY = "dyno123";
 
 let adminAccount = null;
+let pagandoAgora = false;
+
+// ===============================
+// MATRIX NO TOPO
+// ===============================
+function startMatrixEffect() {
+  const canvas = document.getElementById("matrixCanvas");
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = 160;
+  }
+
+  resize();
+  window.addEventListener("resize", resize);
+
+  const letters = "$DYNO0123456789";
+  const fontSize = 16;
+  const columns = Math.floor(canvas.width / fontSize);
+
+  const drops = [];
+  for (let i = 0; i < columns; i++) {
+    drops[i] = Math.random() * canvas.height;
+  }
+
+  function draw() {
+    ctx.fillStyle = "rgba(0,0,0,0.15)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = "#00ff66";
+    ctx.font = fontSize + "px Courier New";
+
+    for (let i = 0; i < drops.length; i++) {
+      const text = letters.charAt(Math.floor(Math.random() * letters.length));
+      ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+      if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+        drops[i] = 0;
+      }
+
+      drops[i]++;
+    }
+  }
+
+  setInterval(draw, 40);
+}
 
 // ===============================
 // PROTEÇÃO POR URL KEY
@@ -111,35 +160,31 @@ async function carregarSaquesPendentes() {
   }
 
   list.innerHTML = data.map((s) => `
-    <div style="
-      border:1px solid #00ff66;
-      padding:15px;
-      margin-bottom:15px;
-      border-radius:10px;
-      background:#000;
-      box-shadow:0 0 10px rgba(0,255,102,0.2);
-      font-family:monospace;
-    ">
+    <div class="saque-card">
       <p><b>ID:</b> ${s.id}</p>
       <p><b>Carteira:</b> ${s.carteira_usuario}</p>
-
-      <p><b>Valor Bruto:</b> ${Number(s.valor_solicitado).toFixed(6)} DYNO</p>
-      <p><b>Taxa:</b> ${Number(s.taxa || 0).toFixed(6)} DYNO</p>
-      <p><b>Valor Final:</b> ${Number(s.valor_final || 0).toFixed(6)} DYNO</p>
-
       <p><b>Status:</b> ${s.status}</p>
 
-      <button onclick="pagarSaque(${s.id}, '${s.carteira_usuario}', ${s.valor_final})"
-        style="
-          padding:10px 15px;
-          margin-top:10px;
-          background:#00ff66;
-          border:none;
-          cursor:pointer;
-          border-radius:8px;
-          font-weight:bold;
-        ">
-        PAGAR
+      <div class="saque-info">
+        <div class="saque-box">
+          TOTAL BRUTO
+          <span>${Number(s.valor_solicitado).toFixed(6)} DYNO</span>
+        </div>
+
+        <div class="saque-box">
+          TAXA (5%)
+          <span>${Number(s.taxa).toFixed(6)} DYNO</span>
+        </div>
+
+        <div class="saque-box">
+          VALOR FINAL
+          <span>${Number(s.valor_final).toFixed(6)} DYNO</span>
+        </div>
+      </div>
+
+      <button class="pay-btn"
+        onclick="pagarSaque(${s.id}, '${s.carteira_usuario}', ${s.valor_final})">
+        PAGAR (ENVIAR VALOR FINAL)
       </button>
     </div>
   `).join("");
@@ -148,18 +193,21 @@ async function carregarSaquesPendentes() {
 // ===============================
 // PAGAR SAQUE (TRANSFER TOKEN)
 // ===============================
-async function pagarSaque(id, carteira, valor) {
+async function pagarSaque(id, carteira, valorFinal) {
   if (!adminAccount) return alert("Conecte a carteira admin primeiro!");
 
   if (adminAccount.toLowerCase() !== ADMIN_WALLET) {
     return alert("❌ Você não é admin!");
   }
 
-  if (!valor || valor <= 0) {
-    return alert("❌ Erro: valor inválido.");
+  if (pagandoAgora) {
+    return alert("⚠️ Aguarde... já existe um pagamento em andamento.");
   }
 
-  if (!confirm(`Deseja pagar ${Number(valor).toFixed(6)} DYNO para:\n${carteira}?`)) {
+  pagandoAgora = true;
+
+  if (!confirm(`Deseja pagar ${Number(valorFinal).toFixed(6)} DYNO para:\n${carteira}?`)) {
+    pagandoAgora = false;
     return;
   }
 
@@ -169,7 +217,7 @@ async function pagarSaque(id, carteira, valor) {
     const contract = new ethers.Contract(tokenAddr, tokenABI, signer);
 
     const dec = await contract.decimals();
-    const amount = ethers.utils.parseUnits(valor.toString(), dec);
+    const amount = ethers.utils.parseUnits(valorFinal.toString(), dec);
 
     alert("⚡ Confirme o pagamento na MetaMask...");
 
@@ -184,6 +232,7 @@ async function pagarSaque(id, carteira, valor) {
     if (error) {
       console.error(error);
       alert("⚠️ Pagamento feito na blockchain, mas falhou atualizar Supabase!");
+      pagandoAgora = false;
       return;
     }
 
@@ -194,11 +243,14 @@ async function pagarSaque(id, carteira, valor) {
     console.error(e);
     alert("❌ Erro ao pagar saque.");
   }
+
+  pagandoAgora = false;
 }
 
 // ===============================
 // INIT
 // ===============================
 window.onload = () => {
-  verificarChaveAdmin();
+  if (!verificarChaveAdmin()) return;
+  startMatrixEffect();
 };
