@@ -122,10 +122,14 @@ async function carregarSaquesPendentes() {
     ">
       <p><b>ID:</b> ${s.id}</p>
       <p><b>Carteira:</b> ${s.carteira_usuario}</p>
-      <p><b>Valor:</b> ${Number(s.valor_solicitado).toFixed(6)} DYNO</p>
+
+      <p><b>Valor Bruto:</b> ${Number(s.valor_solicitado).toFixed(6)} DYNO</p>
+      <p><b>Taxa:</b> ${Number(s.taxa || 0).toFixed(6)} DYNO</p>
+      <p><b>Valor Final:</b> ${Number(s.valor_final || 0).toFixed(6)} DYNO</p>
+
       <p><b>Status:</b> ${s.status}</p>
 
-      <button onclick="pagarSaque(${s.id}, '${s.carteira_usuario}', ${s.valor_solicitado})"
+      <button onclick="pagarSaque(${s.id}, '${s.carteira_usuario}', ${s.valor_final})"
         style="
           padding:10px 15px;
           margin-top:10px;
@@ -151,6 +155,10 @@ async function pagarSaque(id, carteira, valor) {
     return alert("❌ Você não é admin!");
   }
 
+  if (!valor || valor <= 0) {
+    return alert("❌ Erro: valor inválido.");
+  }
+
   if (!confirm(`Deseja pagar ${Number(valor).toFixed(6)} DYNO para:\n${carteira}?`)) {
     return;
   }
@@ -168,7 +176,6 @@ async function pagarSaque(id, carteira, valor) {
     const tx = await contract.transfer(carteira, amount);
     await tx.wait();
 
-    // Atualiza Supabase status para pago
     const { error } = await _supabase
       .from("saques_pendentes")
       .update({ status: "pago" })
