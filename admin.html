@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PAINEL ADMIN - SAQUES</title>
 
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="admin.css" />
 
   <!-- ethers -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
@@ -16,25 +16,36 @@
 
 <body>
 
-  <header class="topbar matrix-header">
-    <div class="logo-area">
-      <div class="logo">PAINEL ADMIN</div>
-      <div class="sublogo">LIBERAÇÃO DE SAQUES</div>
-    </div>
+  <!-- MATRIX HEADER -->
+  <div class="matrix-header">
+    <canvas id="matrixCanvas"></canvas>
+  </div>
 
-    <div class="wallet-area">
-      <button class="btn" onclick="connectAdminWallet()">CONECTAR ADMIN</button>
+  <!-- HEADER -->
+  <header class="topbar">
+    <div class="header-content">
 
-      <div class="wallet-box">
-        <span id="adminWalletDisplay">---</span>
+      <div class="logo-area">
+        <div class="logo">PAINEL ADMIN</div>
+        <div class="sublogo">LIBERAÇÃO DE SAQUES</div>
       </div>
+
+      <div class="wallet-area">
+        <button class="btn" onclick="connectAdminWallet()">CONECTAR ADMIN</button>
+
+        <div class="wallet-box">
+          <span id="adminWalletDisplay">---</span>
+        </div>
+      </div>
+
     </div>
   </header>
 
-  <main style="padding:20px;">
-    <h2 style="text-align:center; margin-bottom:20px;">SAQUES PENDENTES</h2>
+  <!-- MAIN -->
+  <main class="main">
+    <h2>SAQUES PENDENTES</h2>
 
-    <div id="saquesList" style="max-width:1000px; margin:auto;"></div>
+    <div id="saquesList" class="saques-list"></div>
   </main>
 
   <script src="admin.js"></script>
