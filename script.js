@@ -15,7 +15,7 @@ const tokenABI = [
 ];
 
 // ===============================
-// 2. GPUS (VALORES CERTOS)
+// 2. DYNO SHOP
 // ===============================
 const gpus = [
   { id: 1, nome: "Dyno Normal", custo: 100, final: 105, img: "NORMAL.png", hash: 50 },
@@ -29,6 +29,7 @@ let userAccount = null;
 let purchasedDynos = {};
 let miningLoop = null;
 let isConnecting = false;
+let saqueEmAndamento = false;
 
 // ===============================
 // 3. MATRIX $ NO HEADER
@@ -369,7 +370,10 @@ function updateTimerUI(miningUntil) {
 
   if (!miningUntil) {
     if (timerEl) timerEl.innerText = "00:00:00";
-    if (btn) btn.disabled = false;
+    if (btn) {
+      btn.disabled = false;
+      btn.style.opacity = "1";
+    }
     return;
   }
 
@@ -378,9 +382,15 @@ function updateTimerUI(miningUntil) {
 
   if (agora >= fim) {
     if (timerEl) timerEl.innerText = "00:00:00";
-    if (btn) btn.disabled = false;
+    if (btn) {
+      btn.disabled = false;
+      btn.style.opacity = "1";
+    }
   } else {
-    if (btn) btn.disabled = true;
+    if (btn) {
+      btn.disabled = true;
+      btn.style.opacity = "0.5";
+    }
   }
 }
 
@@ -446,78 +456,117 @@ async function resgatarComissaoParaSaldo() {
 }
 
 // ===============================
-// 15. SAQUE (AGORA SALVA COM TAXA DE 5%)
+// 15. SAQUE (ANTI DUPLICAÇÃO)
 // ===============================
 async function solicitarSaque() {
   if (!userAccount) return alert("Conecte a carteira!");
 
+  if (saqueEmAndamento) {
+    return alert("⚠️ Saque já está sendo processado. Aguarde...");
+  }
+
+  saqueEmAndamento = true;
+
   const carteira = userAccount.toLowerCase();
 
-  const { data, error: saldoError } = await _supabase
-    .from("usuarios")
-    .select("saldo_minerado, ref_earnings")
-    .eq("carteira", carteira)
-    .single();
+  try {
+    // Verifica se já existe saque pendente
+    const { data: saquePendente, error: pendenteError } = await _supabase
+      .from("saques_pendentes")
+      .select("*")
+      .eq("carteira_usuario", carteira)
+      .eq("status", "pendente")
+      .maybeSingle();
 
-  if (saldoError) {
-    console.error(saldoError);
-    return alert("Erro ao buscar saldo.");
+    if (pendenteError) {
+      console.error(pendenteError);
+      saqueEmAndamento = false;
+      return alert("Erro ao verificar saque pendente.");
+    }
+
+    if (saquePendente) {
+      saqueEmAndamento = false;
+      return alert("⚠️ Você já possui um saque pendente. Aguarde aprovação.");
+    }
+
+    // Busca saldo atual
+    const { data, error: saldoError } = await _supabase
+      .from("usuarios")
+      .select("saldo_minerado, ref_earnings")
+      .eq("carteira", carteira)
+      .single();
+
+    if (saldoError || !data) {
+      console.error(saldoError);
+      saqueEmAndamento = false;
+      return alert("Erro ao buscar saldo.");
+    }
+
+    const saldoMinerado = Number(data.saldo_minerado || 0);
+    const saldoIndicacao = Number(data.ref_earnings || 0);
+
+    const saldoTotal = saldoMinerado + saldoIndicacao;
+
+    if (saldoTotal < 100) {
+      saqueEmAndamento = false;
+      return alert("Saque mínimo: 100 $DYNO");
+    }
+
+    // Calcula taxa e valor final
+    const taxa = saldoTotal * 0.05;
+    const valorFinal = saldoTotal - taxa;
+
+    // Insere saque
+    const { error: insertError } = await _supabase
+      .from("saques_pendentes")
+      .insert([
+        {
+          carteira_usuario: carteira,
+          valor_solicitado: saldoTotal,
+          taxa: taxa,
+          valor_final: valorFinal,
+          status: "pendente"
+        }
+      ]);
+
+    if (insertError) {
+      console.error(insertError);
+      saqueEmAndamento = false;
+      return alert("Erro ao processar saque.");
+    }
+
+    // Zera saldo do usuário
+    const { error: updateError } = await _supabase
+      .from("usuarios")
+      .update({
+        saldo_minerado: 0,
+        ref_earnings: 0
+      })
+      .eq("carteira", carteira);
+
+    if (updateError) {
+      console.error(updateError);
+      saqueEmAndamento = false;
+      return alert("Erro ao zerar saldo após saque.");
+    }
+
+    document.getElementById("visualGain").innerText = "0.000000";
+    document.getElementById("refEarnings").innerText = "0.00";
+
+    alert(
+      `✅ Saque solicitado!\n\n` +
+      `💰 Total: ${saldoTotal.toFixed(2)} DYNO\n` +
+      `💸 Taxa (5%): ${taxa.toFixed(2)} DYNO\n` +
+      `🏦 Você recebe: ${valorFinal.toFixed(2)} DYNO\n\n` +
+      `⏳ Prazo: 24 a 72 horas`
+    );
+
+  } catch (err) {
+    console.error(err);
+    alert("Erro inesperado no saque.");
   }
 
-  const saldoMinerado = Number(data?.saldo_minerado || 0);
-  const saldoIndicacao = Number(data?.ref_earnings || 0);
-
-  const saldoTotal = saldoMinerado + saldoIndicacao;
-
-  if (saldoTotal < 100) {
-    return alert("Saque mínimo: 100 $DYNO");
-  }
-
-  const taxa = saldoTotal * 0.05;
-  const valorFinal = saldoTotal - taxa;
-
-  // SALVA NO SUPABASE JÁ COM TAXA CALCULADA
-  const { error: insertError } = await _supabase
-    .from("saques_pendentes")
-    .insert([
-      {
-        carteira_usuario: carteira,
-        valor_solicitado: saldoTotal,
-        taxa: taxa,
-        valor_final: valorFinal,
-        status: "pendente"
-      }
-    ]);
-
-  if (insertError) {
-    console.error(insertError);
-    return alert("Erro ao processar saque.");
-  }
-
-  // ZERA SALDO DO USUÁRIO APÓS PEDIDO
-  const { error: updateError } = await _supabase
-    .from("usuarios")
-    .update({
-      saldo_minerado: 0,
-      ref_earnings: 0
-    })
-    .eq("carteira", carteira);
-
-  if (updateError) {
-    console.error(updateError);
-    return alert("Erro ao zerar saldo após saque.");
-  }
-
-  document.getElementById("visualGain").innerText = "0.000000";
-  document.getElementById("refEarnings").innerText = "0.00";
-
-  alert(
-    `✅ Saque solicitado!\n\n` +
-    `💰 Total: ${saldoTotal.toFixed(2)} DYNO\n` +
-    `💸 Taxa (5%): ${taxa.toFixed(2)} DYNO\n` +
-    `🏦 Você recebe: ${valorFinal.toFixed(2)} DYNO\n\n` +
-    `⏳ Prazo: 24 a 72 horas`
-  );
+  saqueEmAndamento = false;
 }
 
 // ===============================
@@ -572,7 +621,7 @@ async function pagarComissaoIndicacao(valorCompra, comprador) {
 }
 
 // ===============================
-// 17. COMPRAR GPU
+// 17. COMPRAR DYNO
 // ===============================
 async function buyGPU(i) {
   if (!userAccount) return alert("Conecte a carteira!");
@@ -783,6 +832,7 @@ window.onload = async () => {
   updateHashrate();
   startMatrixEffect();
 };
+
 
 
 
