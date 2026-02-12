@@ -16,15 +16,14 @@
 
 <body>
 
-  <!-- MATRIX -->
-  <div class="matrix-header">
+  <!-- HEADER COM EFEITO MATRIX -->
+  <header class="topbar matrix-header">
+
+    <!-- CANVAS MATRIX (FUNDO) -->
     <canvas id="matrixCanvas"></canvas>
-  </div>
 
-  <!-- HEADER -->
-  <header class="topbar">
+    <!-- CONTEÚDO DO HEADER -->
     <div class="header-content">
-
       <div class="logo-area">
         <div style="display:flex; align-items:center; gap:12px;">
           <img src="DYNO.png" alt="DYNO" style="width:55px; height:55px; object-fit:contain;">
@@ -36,147 +35,153 @@
       </div>
 
       <div class="wallet-area">
-        <button class="btn btn-obter" onclick="window.open('https://pancakeswap.finance/', '_blank')">
+        <!-- BOTÃO OBTER DYNO -->
+        <a class="btn btn-obter" id="btnObterDyno" target="_blank"
+          href="https://pancakeswap.finance/swap?chain=bsc&inputCurrency=0x55d398326f99059fF775485246999027B3197955&outputCurrency=0xDa9756415A5D92027d994Fd33aC1823bA2fdc9ED">
           OBTER DYNO
-        </button>
+        </a>
 
-        <button class="btn" onclick="connectWallet()">
-          CONECTAR
-        </button>
+        <button class="btn" onclick="connectWallet()">CONECTAR</button>
 
         <div class="wallet-box">
           <span id="walletDisplay">---</span>
         </div>
       </div>
-
     </div>
   </header>
 
-  <!-- INFO ROW -->
+  <!-- INFO CARDS -->
   <section class="info-row">
     <div class="info-card">
       <h4>SALDO MINERADO</h4>
-      <p id="saldoMinerado">0.000000 $DYNO</p>
+      <p><span id="visualGain">0.000000</span> $DYNO</p>
     </div>
 
     <div class="info-card">
       <h4>LUCRO INDICAÇÃO (10%)</h4>
-      <p id="lucroIndicacao">0.00 $DYNO</p>
-      <div class="small-info">
-        INDICADOS: <span id="indicadosCount">0</span>
-      </div>
+      <p><span id="refEarnings">0.00</span> $DYNO</p>
+      <p class="small-info">INDICADOS: <span id="refCount">0</span></p>
     </div>
 
     <div class="info-card">
       <h4>PODER DE HASH</h4>
-      <p id="hashPower">0 H/s</p>
+      <p><span id="hashrate">0</span> H/s</p>
     </div>
 
     <div class="info-card">
       <h4>SALDO EM CARTEIRA</h4>
-      <p id="saldoCarteira">0.00 $DYNO</p>
+      <p><span id="walletBalance">0.00</span> $DYNO</p>
     </div>
   </section>
 
-  <!-- MAIN GRID -->
-  <section class="main-grid">
+  <!-- GRID PRINCIPAL -->
+  <main class="main-grid">
 
-    <!-- PANEL -->
-    <div class="panel">
+    <!-- PAINEL ESQUERDO -->
+    <aside class="panel">
       <h3>TERMINAL DE OPERAÇÃO</h3>
 
-      <button class="btn-green" onclick="ativarMineracao()">
+      <button id="btnActivate" class="btn-green" onclick="activateMining()">
         ⚡ ATIVAR MINERAÇÃO (24H)
       </button>
 
-      <div class="timer">
-        REATIVAR EM: <span id="cooldownTimer">00:00:00</span>
-      </div>
+      <p class="timer">
+        REATIVAR EM: <span id="activationTimer">00:00:00</span>
+      </p>
 
       <button class="btn-green" onclick="solicitarSaque()">
-        💳 SOLICITAR SAQUE
+        🏧 SOLICITAR SAQUE
       </button>
 
-      <button class="btn-green" onclick="resgatarComissao()">
+      <button class="btn-green" onclick="resgatarComissaoParaSaldo()">
         💰 RESGATAR COMISSÃO
       </button>
 
-      <button class="btn-green" onclick="copiarLinkIndicacao()">
+      <button class="btn-green" onclick="copyRefLink()">
         👥 COPIAR LINK DE INDICAÇÃO
       </button>
 
-      <!-- NOVOS BOTÕES -->
-      <button class="btn-green btn-metamask" onclick="addTokenMetaMask()">
+      <!-- BOTÃO METAMASK -->
+      <button class="btn-green btn-metamask" onclick="addDynoToMetaMask()">
         🦊 ADICIONAR DYNO NA METAMASK
       </button>
 
-      <button class="btn-green btn-copy" onclick="copiarContrato()">
+      <!-- BOTÃO COPIAR CONTRATO -->
+      <button class="btn-green btn-copy" onclick="copyDynoContract()">
         📋 COPIAR CONTRATO DYNO
       </button>
 
-      <input id="refLink" class="ref-input" readonly value="Conecte a carteira." />
-
-    </div>
+      <!-- INPUT LINK -->
+      <input id="refLink" class="ref-input" value="Conecte a carteira..." readonly />
+    </aside>
 
     <!-- SHOP -->
-    <div class="shop">
+    <section class="shop">
       <h2>MERCADO DE HARDWARE</h2>
+      <div id="gpu-grid" class="gpu-grid"></div>
+    </section>
 
-      <div class="gpu-grid">
+  </main>
 
-        <div class="gpu-item">
-          <div class="badge-profit">LUCRO: +5</div>
-          <img src="NOMAL.png" alt="NORMAL" />
-          <h4>Dyno NORMAL</h4>
-          <p>CUSTO: 100 DYNO</p>
-          <p>RETORNO: 105 DYNO</p>
-          <button onclick="comprarGPU('NORMAL')">ADQUIRIR</button>
+  <!-- RODAPÉ -->
+  <footer class="footer">
+    <div class="footer-box">
+      <h3>INFORMAÇÕES IMPORTANTES</h3>
+
+      <div class="footer-columns">
+
+        <div class="footer-col">
+          <h4>⛏️ Mineração</h4>
+          <p>- A mineração dura <b>10 dias</b>.</p>
+          <p>- Para minerar é obrigatório ativar a mineração <b>todo dia</b>.</p>
+          <p>- Cada ativação dura <b>24 horas</b>.</p>
+          <p>- Se não ativar, <b>não minera</b>.</p>
         </div>
 
-        <div class="gpu-item">
-          <div class="badge-profit">LUCRO: +20</div>
-          <img src="RARO.png" alt="RARO" />
-          <h4>Dyno RARO</h4>
-          <p>CUSTO: 200 DYNO</p>
-          <p>RETORNO: 220 DYNO</p>
-          <button onclick="comprarGPU('RARO')">ADQUIRIR</button>
+        <div class="footer-col">
+          <h4>🛒 Dynos</h4>
+          <p>- Só ganha se tiver Dyno comprado.</p>
+          <p>- Só pode comprar <b>1 de cada raridade</b>.</p>
+          <p>- Após 10 dias, pode comprar novamente.</p>
+          <p>- Indicação paga <b>10%</b> somente quando o indicado comprar.</p>
         </div>
 
-        <div class="gpu-item">
-          <div class="badge-profit">LUCRO: +60</div>
-          <img src="ÉPICO.png" alt="ÉPICO" />
-          <h4>Dyno ÉPICO</h4>
-          <p>CUSTO: 400 DYNO</p>
-          <p>RETORNO: 460 DYNO</p>
-          <button onclick="comprarGPU('ÉPICO')">ADQUIRIR</button>
+        <div class="footer-col">
+          <h4>🏧 Saques</h4>
+          <p>- Saque mínimo: <b>100 DYNO</b>.</p>
+          <p>- Taxa de saque: <b>5%</b>.</p>
+          <p>- Saques podem levar de <b>24h a 72h</b>.</p>
+          <p>- O mercado cripto é instável e não garante lucros.</p>
         </div>
 
-        <div class="gpu-item">
-          <div class="badge-profit">LUCRO: +160</div>
-          <img src="LENDÁRIO.png" alt="LENDÁRIO" />
-          <h4>Dyno LENDÁRIO</h4>
-          <p>CUSTO: 800 DYNO</p>
-          <p>RETORNO: 960 DYNO</p>
-          <button onclick="comprarGPU('LENDÁRIO')">ADQUIRIR</button>
-        </div>
-
-        <div class="gpu-item">
-          <div class="badge-profit">LUCRO: +400</div>
-          <img src="SUPER LANDÁRIO.png" alt="SUPER LENDÁRIO" />
-          <h4>Dyno SUPER LENDÁRIO</h4>
-          <p>CUSTO: 1600 DYNO</p>
-          <p>RETORNO: 2000 DYNO</p>
-          <button onclick="comprarGPU('SUPER LENDÁRIO')">ADQUIRIR</button>
+        <div class="footer-col">
+          <h4>📜 Termos</h4>
+          <p>
+            Ao utilizar este sistema você concorda que DYNO-CRYPTO é um projeto experimental,
+            sem garantia de lucro.
+          </p>
+          <p>
+            A mineração depende de ativação diária e compras de Dynos.
+            Saques são processados manualmente e podem demorar até 72 horas.
+          </p>
+          <p>
+            Proibido para menores de 18 anos. Use por sua conta e risco.
+          </p>
         </div>
 
       </div>
-    </div>
 
-  </section>
+      <div class="footer-warning">
+        <p>💻 DYNO-CRYPTO V2.0 PRO - SYSTEM ONLINE</p>
+        <p>POWERED BY BSC NETWORK</p>
+      </div>
+    </div>
+  </footer>
 
   <script src="script.js"></script>
 </body>
 </html>
+
 
 
 
