@@ -22,9 +22,9 @@ const tokenABI = [
 const gpus = [
   { id: 1, nome: "NORMAL", custo: 100, final: 105, img: "NORMAL.png", hash: 50 },
   { id: 2, nome: "RARO", custo: 200, final: 220, img: "RARO.png", hash: 100 },
-  { id: 3, nome: "ÉPICO", custo: 400, final: 460, img: "ÉPICO.png", hash: 200 },
-  { id: 4, nome: "LENDÁRIO", custo: 800, final: 960, img: "LENDÁRIO.png", hash: 400 },
-  { id: 5, nome: "SUPER LENDÁRIO", custo: 1600, final: 2000, img: "SUPER LENDÁRIO.png", hash: 800 }
+  { id: 3, nome: "EPICO", custo: 400, final: 460, img: "EPICO.png", hash: 200 },
+  { id: 4, nome: "LENDARIO", custo: 800, final: 960, img: "LENDARIO.png", hash: 400 },
+  { id: 5, nome: "SUPER LENDARIO", custo: 1600, final: 2000, img: "SUPER_LENDARIO.png", hash: 800 }
 ];
 
 let userAccount = null;
@@ -124,7 +124,6 @@ function getLucroTotalPorDia() {
 function getLucroPorSegundo() {
   const lucroDia = getLucroTotalPorDia();
   if (lucroDia <= 0) return 0;
-
   return lucroDia / 86400;
 }
 
@@ -723,11 +722,13 @@ function renderShop() {
     return `
       <div class="gpu-item">
         <span class="badge-profit">FINAL: ${g.final}</span>
-        <img src="${g.img}" alt="${g.nome}">
+
+        <img src="${g.img}" alt="${g.nome}" onerror="this.src='DYNO.png';">
+
         <h4>${g.nome}</h4>
 
         <p style="font-size:0.8rem; margin: 5px 0;">CUSTO: ${g.custo} DYNO</p>
-        <p style="font-size:0.75rem; opacity:0.7;">LUCRO: ${lucro} DYNO</p>
+        <p style="font-size:0.75rem; opacity:0.7;">LUCRO: +${lucro} DYNO</p>
 
         <button onclick="buyGPU(${i})" ${dono ? "disabled" : ""}>
           ${dono ? "LOCKED" : "ADQUIRIR"}
@@ -867,6 +868,8 @@ window.onload = async () => {
   updateHashrate();
   startMatrixEffect();
 };
+
+
 
 
 
