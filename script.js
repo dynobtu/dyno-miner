@@ -11,7 +11,9 @@ const tokenAddr = "0xDa9756415A5D92027d994Fd33aC1823bA2fdc9ED";
 const tokenABI = [
   "function transfer(address to, uint256 amount) public returns (bool)",
   "function balanceOf(address account) view returns (uint256)",
-  "function decimals() view returns (uint8)"
+  "function decimals() view returns (uint8)",
+  "function symbol() view returns (string)",
+  "function name() view returns (string)"
 ];
 
 // ===============================
@@ -245,7 +247,42 @@ async function getOrCreateUser() {
 }
 
 // ===============================
-// 9. CONECTAR WALLET
+// 9. BOTÃO ADICIONAR TOKEN NA METAMASK
+// ===============================
+async function addDynoToMetaMask() {
+  if (!window.ethereum) return alert("Metamask não detectada!");
+
+  try {
+    await window.ethereum.request({
+      method: "wallet_watchAsset",
+      params: {
+        type: "ERC20",
+        options: {
+          address: tokenAddr,
+          symbol: "DYNO",
+          decimals: 18,
+          image: `${window.location.origin}/DYNO.png`
+        }
+      }
+    });
+
+    alert("✅ DYNO adicionado na MetaMask!");
+  } catch (err) {
+    console.error("Erro ao adicionar token:", err);
+    alert("❌ Não foi possível adicionar o token.");
+  }
+}
+
+// ===============================
+// 10. COPIAR CONTRATO
+// ===============================
+function copyDynoContract() {
+  navigator.clipboard.writeText(tokenAddr);
+  alert("✅ Contrato DYNO copiado!");
+}
+
+// ===============================
+// 11. CONECTAR WALLET
 // ===============================
 async function connectWallet() {
   if (isConnecting) return;
@@ -315,7 +352,7 @@ if (window.ethereum) {
 }
 
 // ===============================
-// 10. SALDO TOKEN
+// 12. SALDO TOKEN
 // ===============================
 async function atualizarSaldo() {
   if (!userAccount) return;
@@ -336,7 +373,7 @@ async function atualizarSaldo() {
 }
 
 // ===============================
-// 11. DADOS DO USUÁRIO
+// 13. DADOS DO USUÁRIO
 // ===============================
 async function atualizarDadosUsuario() {
   if (!userAccount) return;
@@ -362,7 +399,7 @@ async function atualizarDadosUsuario() {
 }
 
 // ===============================
-// 12. TIMER UI
+// 14. TIMER UI
 // ===============================
 function updateTimerUI(miningUntil) {
   const btn = document.getElementById("btnActivate");
@@ -395,7 +432,7 @@ function updateTimerUI(miningUntil) {
 }
 
 // ===============================
-// 13. LINK AFILIADO
+// 15. LINK AFILIADO
 // ===============================
 function copyRefLink() {
   const input = document.getElementById("refLink");
@@ -409,7 +446,7 @@ function copyRefLink() {
 }
 
 // ===============================
-// 14. RESGATAR COMISSÃO PARA SALDO MINERADO
+// 16. RESGATAR COMISSÃO PARA SALDO MINERADO
 // ===============================
 async function resgatarComissaoParaSaldo() {
   if (!userAccount) return alert("Conecte a carteira!");
@@ -456,7 +493,7 @@ async function resgatarComissaoParaSaldo() {
 }
 
 // ===============================
-// 15. SAQUE (ANTI DUPLICAÇÃO)
+// 17. SAQUE (ANTI DUPLICAÇÃO)
 // ===============================
 async function solicitarSaque() {
   if (!userAccount) return alert("Conecte a carteira!");
@@ -470,7 +507,6 @@ async function solicitarSaque() {
   const carteira = userAccount.toLowerCase();
 
   try {
-    // Verifica se já existe saque pendente
     const { data: saquePendente, error: pendenteError } = await _supabase
       .from("saques_pendentes")
       .select("*")
@@ -489,7 +525,6 @@ async function solicitarSaque() {
       return alert("⚠️ Você já possui um saque pendente. Aguarde aprovação.");
     }
 
-    // Busca saldo atual
     const { data, error: saldoError } = await _supabase
       .from("usuarios")
       .select("saldo_minerado, ref_earnings")
@@ -512,11 +547,9 @@ async function solicitarSaque() {
       return alert("Saque mínimo: 100 $DYNO");
     }
 
-    // Calcula taxa e valor final
     const taxa = saldoTotal * 0.05;
     const valorFinal = saldoTotal - taxa;
 
-    // Insere saque
     const { error: insertError } = await _supabase
       .from("saques_pendentes")
       .insert([
@@ -535,7 +568,6 @@ async function solicitarSaque() {
       return alert("Erro ao processar saque.");
     }
 
-    // Zera saldo do usuário
     const { error: updateError } = await _supabase
       .from("usuarios")
       .update({
@@ -570,7 +602,7 @@ async function solicitarSaque() {
 }
 
 // ===============================
-// 16. PAGAR COMISSÃO DE INDICAÇÃO (10%)
+// 18. PAGAR COMISSÃO DE INDICAÇÃO (10%)
 // ===============================
 async function pagarComissaoIndicacao(valorCompra, comprador) {
   try {
@@ -621,7 +653,7 @@ async function pagarComissaoIndicacao(valorCompra, comprador) {
 }
 
 // ===============================
-// 17. COMPRAR DYNO
+// 19. COMPRAR DYNO
 // ===============================
 async function buyGPU(i) {
   if (!userAccount) return alert("Conecte a carteira!");
@@ -678,7 +710,7 @@ async function buyGPU(i) {
 }
 
 // ===============================
-// 18. RENDER SHOP
+// 20. RENDER SHOP (MOSTRANDO LUCRO)
 // ===============================
 function renderShop() {
   const grid = document.getElementById("gpu-grid");
@@ -686,14 +718,17 @@ function renderShop() {
 
   grid.innerHTML = gpus.map((g, i) => {
     const dono = purchasedDynos[g.id];
+    const lucro = g.final - g.custo;
 
     return `
       <div class="gpu-item">
         <span class="badge-profit">FINAL: ${g.final}</span>
         <img src="${g.img}" alt="${g.nome}">
         <h4>${g.nome}</h4>
+
         <p style="font-size:0.8rem; margin: 5px 0;">CUSTO: ${g.custo} DYNO</p>
-        <p style="font-size:0.75rem; opacity:0.7;">RETORNO: ${g.final} DYNO</p>
+        <p style="font-size:0.75rem; opacity:0.7;">LUCRO: ${lucro} DYNO</p>
+
         <button onclick="buyGPU(${i})" ${dono ? "disabled" : ""}>
           ${dono ? "LOCKED" : "ADQUIRIR"}
         </button>
@@ -703,7 +738,7 @@ function renderShop() {
 }
 
 // ===============================
-// 19. MINERAÇÃO OFFLINE REAL
+// 21. MINERAÇÃO OFFLINE REAL
 // ===============================
 async function activateMining() {
   if (!userAccount) return alert("Conecte a carteira!");
@@ -825,13 +860,14 @@ function iniciarMineracaoLoop() {
 }
 
 // ===============================
-// 20. INIT
+// 22. INIT
 // ===============================
 window.onload = async () => {
   renderShop();
   updateHashrate();
   startMatrixEffect();
 };
+
 
 
 
