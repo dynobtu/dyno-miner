@@ -481,6 +481,20 @@ button:disabled {
   }
 }
 
+/* ===============================
+   NOVOS BOTÕES METAMASK / COPY
+================================ */
+.btn-metamask {
+  border: 1px solid #00ff66;
+  background: rgba(0, 255, 102, 0.12);
+}
+
+.btn-copy {
+  border: 1px solid rgba(0, 255, 102, 0.8);
+  background: rgba(0, 255, 102, 0.05);
+}
+
+
 
 
 
