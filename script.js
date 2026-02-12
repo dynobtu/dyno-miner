@@ -20,11 +20,11 @@ const tokenABI = [
 // 2. DYNO SHOP
 // ===============================
 const gpus = [
-  { id: 1, nome: "Dyno Normal", custo: 100, final: 105, img: "NORMAL.png", hash: 50 },
-  { id: 2, nome: "Dyno Raro", custo: 200, final: 220, img: "RARO.png", hash: 100 },
-  { id: 3, nome: "Dyno Épico", custo: 400, final: 460, img: "ÉPICO.png", hash: 200 },
-  { id: 4, nome: "Dyno Lendário", custo: 800, final: 960, img: "LENDÁRIO.png", hash: 400 },
-  { id: 5, nome: "Super Lendário", custo: 1600, final: 2000, img: "SUPER LENDÁRIO.png", hash: 800 }
+  { id: 1, nome: "NORMAL", custo: 100, final: 105, img: "NORMAL.png", hash: 50 },
+  { id: 2, nome: "RARO", custo: 200, final: 220, img: "RARO.png", hash: 100 },
+  { id: 3, nome: "ÉOICO", custo: 400, final: 460, img: "ÉPICO.png", hash: 200 },
+  { id: 4, nome: "LENDÁRIO", custo: 800, final: 960, img: "LENDÁRIO.png", hash: 400 },
+  { id: 5, nome: "SUPER LENDÁRIO", custo: 1600, final: 2000, img: "SUPER LENDÁRIO.png", hash: 800 }
 ];
 
 let userAccount = null;
@@ -867,6 +867,7 @@ window.onload = async () => {
   updateHashrate();
   startMatrixEffect();
 };
+
 
 
 
