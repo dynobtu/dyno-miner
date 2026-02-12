@@ -18,20 +18,22 @@ body {
    MATRIX SOMENTE NO TOPO
 ================================ */
 .matrix-header {
+  position: relative;
+  width: 100%;
+  height: 160px;
+  overflow: hidden;
+}
+
+/* Canvas do efeito Matrix */
+#matrixCanvas {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 160px;
-  overflow: hidden;
+  display: block;
   z-index: 0;
   opacity: 0.35;
-}
-
-#matrixCanvas {
-  width: 100%;
-  height: 160px;
-  display: block;
 }
 
 /* ===============================
@@ -76,6 +78,7 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .wallet-box {
@@ -493,6 +496,7 @@ button:disabled {
   border: 1px solid rgba(0, 255, 102, 0.8);
   background: rgba(0, 255, 102, 0.05);
 }
+
 
 
 
