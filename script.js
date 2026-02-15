@@ -23,8 +23,8 @@ const gpus = [
   { id: 1, nome: "NORMAL", custo: 100, final: 105, img: "NORMAL.png", hash: 50 },
   { id: 2, nome: "RARE", custo: 200, final: 220, img: "RARE.png", hash: 100 },
   { id: 3, nome: "EPIC", custo: 400, final: 460, img: "EPIC.png", hash: 200 },
-  { id: 4, nome: "LEGENDARY", custo: 800, final: 960, img: "LEGENDARY.png", hash: 400 },
-  { id: 5, nome: "SUPER LEGENDARY", custo: 1600, final: 2000, img: "SUPER LEGENDARY.png", hash: 800 }
+  { id: 4, nome: "LEGENDARYO", custo: 800, final: 960, img: "LEGENDARY.png", hash: 400 },
+  { id: 5, nome: "SUPER LEGENDARYO", custo: 1600, final: 2000, img: "SUPER LEGENDARY.png", hash: 800 }
 ];
 
 let userAccount = null;
@@ -113,7 +113,7 @@ function getLucroTotalPorDia() {
 
   for (const gpu of gpus) {
     if (purchasedDynos[gpu.id]) {
-      const lucro = gpu. - gpu.custo;
+      const lucro = gpu.final - gpu.custo;
       totalLucro += lucro;
     }
   }
@@ -530,7 +530,7 @@ async function solicitarSaque() {
     }
 
     const taxa = saldoTotal * 0.05;
-    const valor = saldoTotal - taxa;
+    const valorFinal = saldoTotal - taxa;
 
     const { error: insertError } = await _supabase
       .from("saques_pendentes")
@@ -539,7 +539,7 @@ async function solicitarSaque() {
           carteira_usuario: carteira,
           valor_solicitado: saldoTotal,
           taxa: taxa,
-          valor_: valor,
+          valor_final: valorFinal,
           status: "pendente"
         }
       ]);
@@ -571,7 +571,7 @@ async function solicitarSaque() {
       `✅ Saque solicitado!\n\n` +
       `💰 Total: ${saldoTotal.toFixed(2)} DYNO\n` +
       `💸 Taxa (5%): ${taxa.toFixed(2)} DYNO\n` +
-      `🏦 Você recebe: ${valor.toFixed(2)} DYNO\n\n` +
+      `🏦 Você recebe: ${valorFinal.toFixed(2)} DYNO\n\n` +
       `⏳ Prazo: 24 a 72 horas`
     );
 
@@ -700,11 +700,11 @@ function renderShop() {
 
   grid.innerHTML = gpus.map((g, i) => {
     const dono = purchasedDynos[g.id];
-    const lucro = g. - g.custo;
+    const lucro = g.final - g.custo;
 
     return `
       <div class="gpu-item">
-        <span class="badge-profit">FINISH: ${g.final}</span>
+        <span class="badge-profit">FINAL: ${g.final}</span>
 
         <img src="${g.img}" alt="${g.nome}" onerror="this.src='DYNO.png';">
 
@@ -851,7 +851,3 @@ window.onload = async () => {
   updateHashrate();
   startMatrixEffect();
 };
-
-
-
-
