@@ -20,7 +20,7 @@ const tokenABI = [
 // 2. DYNO SHOP
 // ===============================
 const gpus = [
-  { id: 1, nome: "NORMAL", custo: 100, TOTAL: 105, img: "NORMAL.png", hash: 50 },
+  { id: 1, nome: "NORMAL", custo: 100, final: 105, img: "NORMAL.png", hash: 50 },
   { id: 2, nome: "RARE", custo: 200, final: 220, img: "RARE.png", hash: 100 },
   { id: 3, nome: "EPIC", custo: 400, final: 460, img: "EPIC.png", hash: 200 },
   { id: 4, nome: "LEGENDARY", custo: 800, final: 960, img: "LEGENDARY.png", hash: 400 },
@@ -851,3 +851,4 @@ window.onload = async () => {
   updateHashrate();
   startMatrixEffect();
 };
+
