@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en-US">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -16,32 +16,32 @@
 
 <body>
 
-  <!-- HEADER COM EFEITO MATRIX -->
+  <!-- HEADER WITH MATRIX EFFECT -->
   <header class="topbar matrix-header">
 
-    <!-- CANVAS MATRIX (FUNDO) -->
+    <!-- MATRIX CANVAS (BACKGROUND) -->
     <canvas id="matrixCanvas"></canvas>
 
-    <!-- CONTEÚDO DO HEADER -->
+    <!-- HEADER CONTENT -->
     <div class="header-content">
       <div class="logo-area">
         <div style="display:flex; align-items:center; gap:12px;">
           <img src="DYNO.png" alt="DYNO" style="width:55px; height:55px; object-fit:contain;">
           <div>
             <div class="logo">DYNO-CRYPTO V2.0 PRO</div>
-            <div class="sublogo">MINERAÇÃO ONLINE / OFFLINE (24H)</div>
+            <div class="sublogo">ONLINE / OFFLINE MINING (24H)</div>
           </div>
         </div>
       </div>
 
       <div class="wallet-area">
-        <!-- BOTÃO OBTER DYNO -->
+        <!-- GET DYNO BUTTON -->
         <a class="btn btn-obter" id="btnObterDyno" target="_blank"
           href="https://pancakeswap.finance/swap?chain=bsc&inputCurrency=0x55d398326f99059fF775485246999027B3197955&outputCurrency=0xDa9756415A5D92027d994Fd33aC1823bA2fdc9ED">
-          OBTER DYNO
+          GET DYNO
         </a>
 
-        <button class="btn" onclick="connectWallet()">CONECTAR</button>
+        <button class="btn" onclick="connectWallet()">CONNECT</button>
 
         <div class="wallet-box">
           <span id="walletDisplay">---</span>
@@ -53,126 +53,126 @@
   <!-- INFO CARDS -->
   <section class="info-row">
     <div class="info-card">
-      <h4>SALDO MINERADO</h4>
+      <h4>MINED BALANCE</h4>
       <p><span id="visualGain">0.000000</span> $DYNO</p>
     </div>
 
     <div class="info-card">
-      <h4>LUCRO INDICAÇÃO (10%)</h4>
+      <h4>REFERRAL PROFIT (10%)</h4>
       <p><span id="refEarnings">0.00</span> $DYNO</p>
-      <p class="small-info">INDICADOS: <span id="refCount">0</span></p>
+      <p class="small-info">REFERRALS: <span id="refCount">0</span></p>
     </div>
 
     <div class="info-card">
-      <h4>PODER DE HASH</h4>
+      <h4>HASH POWER</h4>
       <p><span id="hashrate">0</span> H/s</p>
     </div>
 
     <div class="info-card">
-      <h4>SALDO EM CARTEIRA</h4>
+      <h4>WALLET BALANCE</h4>
       <p><span id="walletBalance">0.00</span> $DYNO</p>
     </div>
   </section>
 
-  <!-- GRID PRINCIPAL -->
+  <!-- MAIN GRID -->
   <main class="main-grid">
 
-    <!-- PAINEL ESQUERDO -->
+    <!-- LEFT PANEL -->
     <aside class="panel">
-      <h3>TERMINAL DE OPERAÇÃO</h3>
+      <h3>OPERATION TERMINAL</h3>
 
       <button id="btnActivate" class="btn-green" onclick="activateMining()">
-        ⚡ ATIVAR MINERAÇÃO (24H)
+        ⚡ ACTIVATE MINING (24H)
       </button>
 
       <p class="timer">
-        REATIVAR EM: <span id="activationTimer">00:00:00</span>
+        REACTIVATE IN: <span id="activationTimer">00:00:00</span>
       </p>
 
       <button class="btn-green" onclick="solicitarSaque()">
-        🏧 SOLICITAR SAQUE
+        🏧 REQUEST WITHDRAWAL
       </button>
 
       <button class="btn-green" onclick="resgatarComissaoParaSaldo()">
-        💰 RESGATAR COMISSÃO
+        💰 CLAIM COMMISSION
       </button>
 
       <button class="btn-green" onclick="copyRefLink()">
-        👥 COPIAR LINK DE INDICAÇÃO
+        👥 COPY REFERRAL LINK
       </button>
 
-      <!-- BOTÃO METAMASK -->
+      <!-- METAMASK BUTTON -->
       <button class="btn-green btn-metamask" onclick="addDynoToMetaMask()">
-        🦊 ADICIONAR DYNO NA METAMASK
+        🦊 ADD DYNO TO METAMASK
       </button>
 
-      <!-- BOTÃO COPIAR CONTRATO -->
+      <!-- COPY CONTRACT BUTTON -->
       <button class="btn-green btn-copy" onclick="copyDynoContract()">
-        📋 COPIAR CONTRATO DYNO
+        📋 COPY DYNO CONTRACT
       </button>
 
       <!-- INPUT LINK -->
-      <input id="refLink" class="ref-input" value="Conecte a carteira..." readonly />
+      <input id="refLink" class="ref-input" value="Connect wallet..." readonly />
     </aside>
 
     <!-- SHOP -->
     <section class="shop">
-      <h2>MERCADO DE HARDWARE</h2>
+      <h2>HARDWARE MARKET</h2>
       <div id="gpu-grid" class="gpu-grid"></div>
     </section>
 
   </main>
 
-  <!-- RODAPÉ -->
+  <!-- FOOTER -->
   <footer class="footer">
     <div class="footer-box">
-      <h3>INFORMAÇÕES IMPORTANTES</h3>
+      <h3>IMPORTANT INFORMATION</h3>
 
       <div class="footer-columns">
 
         <div class="footer-col">
-          <h4>⛏️ Mineração</h4>
-          <p>- A mineração dura <b>10 dias</b>.</p>
-          <p>- Para minerar é obrigatório ativar a mineração <b>todo dia</b>.</p>
-          <p>- Cada ativação dura <b>24 horas</b>.</p>
-          <p>- Se não ativar, <b>não minera</b>.</p>
+          <h4>⛏️ Mining</h4>
+          <p>- Mining lasts <b>10 days</b>.</p>
+          <p>- Daily activation is <b>mandatory</b>.</p>
+          <p>- Each activation lasts <b>24 hours</b>.</p>
+          <p>- No activation = <b>no mining</b>.</p>
         </div>
 
         <div class="footer-col">
           <h4>🛒 Dynos</h4>
-          <p>- Só ganha se tiver Dyno comprado.</p>
-          <p>- Só pode comprar <b>1 de cada raridade</b>.</p>
-          <p>- Após 10 dias, pode comprar novamente.</p>
-          <p>- Indicação paga <b>10%</b> somente quando o indicado comprar.</p>
+          <p>- Earnings require purchased Dynos.</p>
+          <p>- Only <b>1 of each rarity</b> allowed.</p>
+          <p>- After 10 days, repurchase is allowed.</p>
+          <p>- Referral pays <b>10%</b> only when purchase is made.</p>
         </div>
 
         <div class="footer-col">
-          <h4>🏧 Saques</h4>
-          <p>- Saque mínimo: <b>100 DYNO</b>.</p>
-          <p>- Taxa de saque: <b>5%</b>.</p>
-          <p>- Saques podem levar de <b>24h a 72h</b>.</p>
-          <p>- O mercado cripto é instável e não garante lucros.</p>
+          <h4>🏧 Withdrawals</h4>
+          <p>- Minimum withdrawal: <b>100 DYNO</b>.</p>
+          <p>- Withdrawal fee: <b>5%</b>.</p>
+          <p>- Processing time: <b>24h to 72h</b>.</p>
+          <p>- Crypto market is volatile and profits are not guaranteed.</p>
         </div>
 
         <div class="footer-col">
-          <h4>📜 Termos</h4>
+          <h4>📜 Terms</h4>
           <p>
-            Ao utilizar este sistema você concorda que DYNO-CRYPTO é um projeto experimental,
-            sem garantia de lucro.
+            By using this system you agree that DYNO-CRYPTO is an experimental project
+            with no profit guarantee.
           </p>
           <p>
-            A mineração depende de ativação diária e compras de Dynos.
-            Saques são processados manualmente e podem demorar até 72 horas.
+            Mining depends on daily activation and Dyno purchases.
+            Withdrawals are processed manually and may take up to 72 hours.
           </p>
           <p>
-            Proibido para menores de 18 anos. Use por sua conta e risco.
+            Not allowed for users under 18. Use at your own risk.
           </p>
         </div>
 
       </div>
 
       <div class="footer-warning">
-        <p>💻 DYNO-CRYPTO V2.0 PRO - SYSTEM ONLINE</p>
+        <p>💻 DYNO-MINER V2.0 PRO - SYSTEM ONLINE</p>
         <p>POWERED BY BSC NETWORK</p>
       </div>
     </div>
@@ -181,23 +181,3 @@
   <script src="script.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
