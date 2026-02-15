@@ -113,7 +113,7 @@ function getLucroTotalPorDia() {
 
   for (const gpu of gpus) {
     if (purchasedDynos[gpu.id]) {
-      const lucro = gpu.final - gpu.custo;
+      const lucro = gpu. - gpu.custo;
       totalLucro += lucro;
     }
   }
@@ -530,7 +530,7 @@ async function solicitarSaque() {
     }
 
     const taxa = saldoTotal * 0.05;
-    const valorFinal = saldoTotal - taxa;
+    const valor = saldoTotal - taxa;
 
     const { error: insertError } = await _supabase
       .from("saques_pendentes")
@@ -539,7 +539,7 @@ async function solicitarSaque() {
           carteira_usuario: carteira,
           valor_solicitado: saldoTotal,
           taxa: taxa,
-          valor_final: valorFinal,
+          valor_: valor,
           status: "pendente"
         }
       ]);
@@ -571,7 +571,7 @@ async function solicitarSaque() {
       `✅ Saque solicitado!\n\n` +
       `💰 Total: ${saldoTotal.toFixed(2)} DYNO\n` +
       `💸 Taxa (5%): ${taxa.toFixed(2)} DYNO\n` +
-      `🏦 Você recebe: ${valorFinal.toFixed(2)} DYNO\n\n` +
+      `🏦 Você recebe: ${valor.toFixed(2)} DYNO\n\n` +
       `⏳ Prazo: 24 a 72 horas`
     );
 
@@ -700,11 +700,11 @@ function renderShop() {
 
   grid.innerHTML = gpus.map((g, i) => {
     const dono = purchasedDynos[g.id];
-    const lucro = g.final - g.custo;
+    const lucro = g. - g.custo;
 
     return `
       <div class="gpu-item">
-        <span class="badge-profit">FINAL: ${g.final}</span>
+        <span class="badge-profit">FINISH: ${g.final}</span>
 
         <img src="${g.img}" alt="${g.nome}" onerror="this.src='DYNO.png';">
 
@@ -851,3 +851,4 @@ window.onload = async () => {
   updateHashrate();
   startMatrixEffect();
 };
+
