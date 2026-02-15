@@ -704,7 +704,7 @@ function renderShop() {
 
     return `
       <div class="gpu-item">
-        <span class="badge-profit">FINISH: ${g.final}</span>
+        <span class="badge-profit">FINAL: ${g.final}</span>
 
         <img src="${g.img}" alt="${g.nome}" onerror="this.src='DYNO.png';">
 
@@ -851,4 +851,5 @@ window.onload = async () => {
   updateHashrate();
   startMatrixEffect();
 };
+
 
