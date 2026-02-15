@@ -333,23 +333,6 @@ async function connectWallet() {
   isConnecting = false;
 }
 
-if (window.ethereum) {
-  window.ethereum.on("accountsChanged", async (accounts) => {
-    if (accounts.length > 0) {
-      userAccount = accounts[0];
-      await atualizarSaldo();
-      await atualizarDadosUsuario();
-      await carregarDynosComprados();
-      renderShop();
-      updateHashrate();
-    }
-  });
-
-  window.ethereum.on("chainChanged", () => {
-    window.location.reload();
-  });
-}
-
 // ===============================
 // 12. SALDO TOKEN
 // ===============================
@@ -709,7 +692,7 @@ async function buyGPU(i) {
 }
 
 // ===============================
-// 20. RENDER SHOP (MOSTRANDO LUCRO)
+// 20. RENDER SHOP (ALTERADO CONFORME SOLICITADO)
 // ===============================
 function renderShop() {
   const grid = document.getElementById("gpu-grid");
@@ -727,11 +710,11 @@ function renderShop() {
 
         <h4>${g.nome}</h4>
 
-        <p style="font-size:0.8rem; margin: 5px 0;">CUSTO: ${g.custo} DYNO</p>
-        <p style="font-size:0.75rem; opacity:0.7;">LUCRO: +${lucro} DYNO</p>
+        <p style="font-size:0.8rem; margin: 5px 0;">COST: ${g.custo} DYNO</p>
+        <p style="font-size:0.75rem; opacity:0.7;">PROFIT: +${lucro} DYNO</p>
 
         <button onclick="buyGPU(${i})" ${dono ? "disabled" : ""}>
-          ${dono ? "LOCKED" : "ADQUIRIR"}
+          ${dono ? "LOCKED" : "BUY"}
         </button>
       </div>
     `;
@@ -868,25 +851,3 @@ window.onload = async () => {
   updateHashrate();
   startMatrixEffect();
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
